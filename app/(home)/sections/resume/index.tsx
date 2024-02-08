@@ -24,6 +24,12 @@ function ResumeSection({ title, children }: { title: string; children: React.Rea
 
 export default function Resume({ data }: { data: { educationData: EducationEntry[], workData: WorkEntry[], skillsData: SkillsEntry[] } }) {
   const { educationData, workData, skillsData } = data;
+  // If workData[i].end is null, then it is present. Move to the front of the array.
+  workData.sort((a, b) => {
+    if (!a.end) return -1;
+    if (!b.end) return 1;
+    return 0;
+  });
   return (
     <>
       <ResumeSection title={ResumeSections.Education}>

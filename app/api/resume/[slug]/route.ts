@@ -43,7 +43,8 @@ function buildEntry(r: any, slug: string) {
 export async function GET(request: NextRequest, { params }: { params: { slug: string } }) {
   const { slug } = params;
   const sort = request.nextUrl.searchParams.get('sort') ?? '-created';
-  const res = await fetch(`${process.env.PB_URL}/api/collections/${slug}?sort=${sort}`);
+  console.log('auth', process.env.PB_API_KEY)
+  const res = await fetch(`${process.env.PB_URL}/api/collections/${slug}/records?sort=${sort}`, { headers: { 'Authorization': process.env.PB_API_KEY || '' } });
   const results = await res.json();
   if (!results.items) { throw results.message };
 

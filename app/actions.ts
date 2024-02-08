@@ -1,5 +1,6 @@
 "use server"
 
+import fetchAbsolute from "@/utils/fetch-absolute";
 import { ContactInfo } from "./(home)/sections/contact";
 import { cookies } from 'next/headers'
 export async function submitContactForm(formData: FormData, state: any) {
@@ -23,7 +24,7 @@ export async function submitContactForm(formData: FormData, state: any) {
     message: formData.get('message') as string,
   };
   state.setIsPosting(true);
-  const recpatcha = await fetch('/api/validate', { method: 'GET' });
+  const recpatcha = await fetchAbsolute('/api/validate');
   if (recpatcha.status === 400) {
     state.setError({message: 'Recaptcha failed', status: 400});
     state.setIsPosting(false);
@@ -35,7 +36,7 @@ export async function submitContactForm(formData: FormData, state: any) {
     return;
   }
 
-  fetch('/api/contact', {
+  fetchAbsolute('/api/contact', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(contactInfo)

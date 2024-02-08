@@ -12,21 +12,16 @@ async function fetchResumeData() {
   try {
     const apiUrl = process.env.PB_URL ?? 'localhost:8090';
     const data = await Promise.all([
-      fetchAbsolute('/api/resume/education').then(res => res.json()),
-      fetchAbsolute('/api/collections/work').then(res => res.json()),
-      fetchAbsolute('/api/collections/skill').then(res => res.json()),
-      fetchAbsolute('/api/collections/album').then(res => res.json())
+      fetchAbsolute('/api/resume/education?sort=-graduated').then(res => res.json()),
+      fetchAbsolute('/api/resume/work?sort=-end').then(res => res.json()),
+      fetchAbsolute('/api/resume/skill?sort=-level').then(res => res.json()),
+      fetchAbsolute('/api/resume/album').then(res => res.json()),
     ]);
     return {
-      educationData: data[0]?.['items'] ?? [],
-      workData: data[1]?.['items'] ?? [],
-      skillsData: data[2]?.['items'] ?? [],
-      albumsData: data[3]?.['items']?.map((alb: AlbumType) => {
-        return {
-          ...alb,
-          thumbnail: `${apiUrl}/api/files/${alb.collectionId}/${alb.id}/${alb.thumbnail}`
-        };
-      }) ?? []
+      educationData: data[0] ?? [],
+      workData: data[1] ?? [],
+      skillsData: data[2] ?? [],
+      albumsData: data[3] ?? []
     };
   } catch (error) {
     console.error('Error fetching resume data', error);
@@ -39,7 +34,7 @@ async function fetchResumeData() {
   }
 }
 
-export default async function Home({}) {
+export default async function Home({ }) {
   const { educationData, workData, skillsData, albumsData } = await fetchResumeData();
   return (
     <main>
