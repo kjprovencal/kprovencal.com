@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import resumeData from '../../lib/resumeData.json';
+import resumeData from '@/lib/resume-data.json';
 import { useMemo } from 'react';
 
 interface Network {

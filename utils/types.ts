@@ -1,4 +1,4 @@
-import { SectionState } from "../components/sections";
+import { SectionState } from "../app/(home)/sections";
 import PocketBase from 'pocketbase';
 
 export type PBContextType = {

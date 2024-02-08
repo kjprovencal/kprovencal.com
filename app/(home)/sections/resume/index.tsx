@@ -1,7 +1,7 @@
 import { ResumeSections } from "@/utils/constants";
 import Experience from "./experience";
 import Skills from "./skills";
-import { EducationEntry, SkillsEntry, WorkEntry } from "@/lib/resumeEntry";
+import { EducationEntry, SkillsEntry, WorkEntry } from "@/lib/resume-entry";
 
 function ResumeSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (

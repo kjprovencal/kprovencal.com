@@ -1,9 +1,9 @@
 "use client"
 import { useContext, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { Section } from "../sections";
+import { Section } from "../../app/(home)/sections";
 import { SectionContext } from '../../app/(home)/section-provider';
-import { SectionState } from "../sections";
+import { SectionState } from "../../app/(home)/sections";
 
 export default function SectionWrapper({ section, children }: { section: Section, children: React.ReactNode }) {
   const { sectionState, setSectionState } = useContext(SectionContext);

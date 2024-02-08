@@ -1,5 +1,5 @@
-import resumeData from '../../lib/resumeData.json';
-import { ResumeMainData } from '../../utils/types';
+import resumeData from '@/lib/resume-data.json';
+import { ResumeMainData } from '@/utils/types';
 import Link from 'next/link';
 import { FaChevronCircleDown, FaLinkedin, FaInstagram, FaGithub } from "react-icons/fa";
 

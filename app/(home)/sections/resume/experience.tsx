@@ -1,4 +1,4 @@
-import { EducationEntry, WorkEntry } from '@/lib/resumeEntry';
+import { EducationEntry, WorkEntry } from '@/lib/resume-entry';
 
 export default function Experience({data}:{data: EducationEntry | WorkEntry }){
   const location = (data as EducationEntry).school || (data as WorkEntry).company;

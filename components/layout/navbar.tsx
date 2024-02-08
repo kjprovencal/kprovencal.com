@@ -1,7 +1,7 @@
 "use client";
 import { useContext } from "react";
 import { SectionContext } from "../../app/(home)/section-provider";
-import { SectionState, Section } from "../sections";
+import { SectionState, Section } from "../../app/(home)/sections";
 
 const common = "w-full z-20 top-0 left-0 fixed ";
 const transparent = common + "bg-transparent";

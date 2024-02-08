@@ -1,6 +1,6 @@
 "use server"
 
-import { ContactInfo } from "../components/sections/contact";
+import { ContactInfo } from "./(home)/sections/contact";
 import { cookies } from 'next/headers'
 export async function submitContactForm(formData: FormData, state: any) {
   // prevent spamming

@@ -1,31 +1,42 @@
-import About from '../../components/sections/about'
-import Resume from '../../components/sections/resume'
-import Gallery from '../../components/sections/gallery'
+import About from './sections/about'
+import Resume from './sections/resume'
+import Gallery from './sections/gallery'
 import { Suspense } from 'react'
-import Contact from '../../components/sections/contact'
+import Contact from './sections/contact'
 import SectionWrapper from '../../components/layout/wrapper'
-import { Section } from "../../components/sections"
-import { EducationEntry, WorkEntry, SkillsEntry, AlbumType } from '@/lib/resumeEntry'
+import { Section } from "./sections"
+import { EducationEntry, WorkEntry, SkillsEntry, AlbumType } from '@/lib/resume-entry'
+import fetchAbsolute from '@/utils/fetch-absolute'
 
 async function fetchResumeData() {
-  const apiUrl = process.env.PB_URL ?? 'localhost:8090';
-  const data = await Promise.all([
-    fetch(apiUrl + '/api/collections/education/records?sort=-graduated').then(res => res.json()),
-    fetch(apiUrl + '/api/collections/work/records?sort=-end').then(res => res.json()),
-    fetch(apiUrl + '/api/collections/skill/records?sort=-level').then(res => res.json()),
-    fetch(apiUrl + '/api/collections/album/records').then(res => res.json())
-  ]);
-  return {
-    educationData: data[0]?.['items'] ?? [],
-    workData: data[1]?.['items'] ?? [],
-    skillsData: data[2]?.['items'] ?? [],
-    albumsData: data[3]?.['items']?.map((alb: AlbumType) => {
-      return {
-        ...alb,
-        thumbnail: `${apiUrl}/api/files/${alb.collectionId}/${alb.id}/${alb.thumbnail}`
-      };
-    }) ?? []
-  };
+  try {
+    const apiUrl = process.env.PB_URL ?? 'localhost:8090';
+    const data = await Promise.all([
+      fetchAbsolute('/api/resume/education').then(res => res.json()),
+      fetchAbsolute('/api/collections/work').then(res => res.json()),
+      fetchAbsolute('/api/collections/skill').then(res => res.json()),
+      fetchAbsolute('/api/collections/album').then(res => res.json())
+    ]);
+    return {
+      educationData: data[0]?.['items'] ?? [],
+      workData: data[1]?.['items'] ?? [],
+      skillsData: data[2]?.['items'] ?? [],
+      albumsData: data[3]?.['items']?.map((alb: AlbumType) => {
+        return {
+          ...alb,
+          thumbnail: `${apiUrl}/api/files/${alb.collectionId}/${alb.id}/${alb.thumbnail}`
+        };
+      }) ?? []
+    };
+  } catch (error) {
+    console.error('Error fetching resume data', error);
+    return {
+      educationData: [],
+      workData: [],
+      skillsData: [],
+      albumsData: []
+    };
+  }
 }
 
 export default async function Home({}) {

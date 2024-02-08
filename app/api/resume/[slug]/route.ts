@@ -1,8 +1,7 @@
 import { EDUCATION, SKILL, WORK, ALBUM } from '@/utils/constants';
 import { monthYear } from '@/utils/date-format';
-import { AlbumType, EducationEntry, SkillsEntry, WorkEntry, ResumeEntry } from '@/lib/resumeEntry';
+import { AlbumType, EducationEntry, SkillsEntry, WorkEntry, ResumeEntry } from '@/lib/resume-entry';
 import { type NextRequest } from 'next/server';
-import { ResumeParams } from '@/utils/types';
 
 function buildEntry(r: any, slug: string) {
   let e;
@@ -41,7 +40,7 @@ function buildEntry(r: any, slug: string) {
 }
 
 
-export async function GET(request: NextRequest, { params }: { params: ResumeParams }) {
+export async function GET(request: NextRequest, { params }: { params: { slug: string } }) {
   const { slug } = params;
   const sort = request.nextUrl.searchParams.get('sort') ?? '-created';
   const res = await fetch(`${process.env.PB_URL}/api/collections/${slug}?sort=${sort}`);

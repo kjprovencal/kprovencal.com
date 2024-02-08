@@ -2,7 +2,7 @@
 
 import { ReactNode, createContext, useState } from "react";
 import { SectionContextType } from "../../utils/types";
-import { SectionState } from "../../components/sections";
+import { SectionState } from "./sections";
 
 export const SectionContext = createContext<SectionContextType>({sectionState: new SectionState(), setSectionState: () => {}});
 

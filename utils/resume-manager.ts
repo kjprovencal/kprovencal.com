@@ -1,4 +1,4 @@
-import { EducationEntry, SkillsEntry, WorkEntry } from '@/lib/resumeEntry';
+import { EducationEntry, SkillsEntry, WorkEntry } from '@/lib/resume-entry';
 import PocketBase from 'pocketbase';
 
 export default class ResumeManager {

@@ -1,4 +1,4 @@
-import { ContactInfo } from '../../../components/sections/contact';
+import { ContactInfo } from '../../(home)/sections/contact';
 
 export async function POST(request: Request) {
   const contactInfo: ContactInfo = await request.json();
