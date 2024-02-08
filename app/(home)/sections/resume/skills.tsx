@@ -1,5 +1,5 @@
-import { SkillsEntry } from "../../../../utils/types";
-import resumeData from '../../../../lib/resumeData.json';
+import { SkillsEntry } from "@/lib/resumeEntry";
+import resumeData from '@/lib/resumeData.json';
 
 function SkillRow({ data }: { data: SkillsEntry }) {
 

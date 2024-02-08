@@ -35,6 +35,10 @@ export type ResumeMainData = {
   social: Array<SocialType>;
 };
 
+export type ResumeParams = {
+  slug: string;
+};
+
 export type Error = {
   message: string;
   status: number;

@@ -1,8 +1,8 @@
-import { EDUCATION, SKILL, WORK, ALBUM } from '../../../utils/constants';
-import { monthYear } from '../../../utils/date-format';
-import { AlbumType, EducationEntry, SkillsEntry, WorkEntry } from '../../../lib/resumeEntry';
+import { EDUCATION, SKILL, WORK, ALBUM } from '@/utils/constants';
+import { monthYear } from '@/utils/date-format';
+import { AlbumType, EducationEntry, SkillsEntry, WorkEntry, ResumeEntry } from '@/lib/resumeEntry';
 import { type NextRequest } from 'next/server';
-import { ResumeEntry } from '../../../lib/resumeEntry';
+import { ResumeParams } from '@/utils/types';
 
 function buildEntry(r: any, slug: string) {
   let e;
@@ -39,9 +39,9 @@ function buildEntry(r: any, slug: string) {
   }
   return e as ResumeEntry;
 }
-  
 
-export async function GET(request: NextRequest, { params }: { params: { slug: string } }) {
+
+export async function GET(request: NextRequest, { params }: { params: ResumeParams }) {
   const { slug } = params;
   const sort = request.nextUrl.searchParams.get('sort') ?? '-created';
   const res = await fetch(`${process.env.PB_URL}/api/collections/${slug}?sort=${sort}`);
@@ -49,10 +49,10 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
   if (!results.items) { throw results.message };
 
   const entries: ResumeEntry[] = [];
-  
+
   results.items.forEach((r: any) => {
     entries.push(buildEntry(r, slug));
   });
-  
+
   return Response.json(entries);
 }

@@ -5,7 +5,7 @@ import { Suspense } from 'react'
 import Contact from './sections/contact'
 import SectionWrapper from '../../components/layout/wrapper'
 import { Section } from "./sections"
-import { EducationEntry, WorkEntry, SkillsEntry, AlbumType } from '../../lib/resumeEntry'
+import { EducationEntry, WorkEntry, SkillsEntry, AlbumType } from '@/lib/resumeEntry'
 
 async function fetchResumeData() {
   const apiUrl = process.env.PB_URL ?? 'localhost:8090';

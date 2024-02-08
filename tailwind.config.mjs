@@ -1,5 +1,4 @@
 /** @type {import('tailwindcss').Config} */
-import flowbite from "flowbite/plugin";
 export const darkMode = 'media';
 export const content = {
   relative: true,
@@ -33,5 +32,5 @@ export const theme = {
   },
 };
 export const plugins = [
-  flowbite
+  require('flowbite/plugin')
 ];

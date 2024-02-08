@@ -1,4 +1,4 @@
-import { EDUCATION, SKILL, WORK, ALBUM } from "../utils/constants";
+import { EDUCATION, SKILL, WORK, ALBUM } from "@/utils/constants";
 
 export class ResumeEntry {
   id: string;
