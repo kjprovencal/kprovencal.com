@@ -5,6 +5,7 @@
 /.pnp
 .pnp.js
 .yarn/install-state.gz
+.turbo
 
 # testing
 /coverage
@@ -12,6 +13,7 @@
 # next.js
 /.next/
 /out/
+*/dist/
 
 # production
 /build
@@ -27,10 +29,16 @@ yarn-error.log*
 
 # local env files
 .env*.local
-
+*.sendgrid.env
+*.env
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# pocketbase
+/pocketbase/pb_data
+/pocketbase/.env
+/pocketbase/pocketbase

@@ -1,0 +1,99 @@
+{
+  "main": {
+    "name": "Kyle Provencal",
+    "occupation": "",
+    "description": "I'm Kyle Provencal, a software engineer and outdoor enthusiast from the beautiful state of Maine.",
+    "image": "profilepic.jpg",
+    "bio": "I graduated from the University of Massachusetts in Amherst with a BS in Computer Science in December 2021. I've been working at Reconnect, Inc. since September 2022 as a support engineer and full-stack developer. In my free time, I enjoy hiking, skiing, and other outdoor activities.",
+    "contactMessage": "Please reach out on social media or contact me using the form below.",
+    "email": "kjprovencal@gmail.com",
+    "phone": "207-409-7776",
+    "address": {
+      "city": "Portland",
+      "state": "ME",
+      "zip": "04101"
+    },
+    "website": "http://www.kjprovencal.github.io",
+    "resumeDownload": "resume.pdf",
+    "social": [
+      {
+        "name": "linkedin",
+        "url": "https://www.linkedin.com/in/kyle-provencal-0748a616b/",
+        "className": "fa fa-linkedin"
+      },
+      {
+        "name": "instagram",
+        "url": "https://www.instagram.com/kjprovencal/",
+        "className": "fa fa-instagram"
+      },
+      {
+        "name": "github",
+        "url": "https://github.com/kjprovencal",
+        "className": "fa fa-github"
+      }
+    ]
+  },
+  "resume": {
+    "skillmessage": "Here are some of the technologies I'm familiar with. I'm always looking to learn new skills!",
+    "education": [
+      {
+        "school": "University of Massachusetts Amherst",
+        "degree": "BS in Computer Science",
+        "graduated": "December 2021",
+        "description": "Completed a well-rounded curriculum of standard computer science concepts and studied more specific topics such as database management, search engine design, and natural language processing."
+      },
+      {
+        "school": "Maine School of Science and Mathematics",
+        "degree": "High School",
+        "graduated": "May 2018",
+        "description": "Introduced to calculus, physics, and computer science in a college preparatory environment."
+      }
+    ],
+    "work": [
+      {
+        "company": "University of Massachusetts Amherst",
+        "title": "Herbarium Lab Assistant",
+        "years": "Sept. 2019 - Dec. 2020",
+        "description": "Imaged specimen, performed post-processing adjustments using Adobe Lightroom, georeferenced the collection locality, and entered specimen data into Specify."
+      },
+      {
+        "company": "University of Southern Maine",
+        "title": "Computer Lab Monitor",
+        "years": "Sept. 2018 - May 2019",
+        "description": "Supervised the computer labs and installed software updates for the computers in the computer science building."
+      }
+    ],
+    "skills": [
+      {
+        "name": "Python",
+        "level": "70%"
+      },
+      {
+        "name": "C++",
+        "level": "65%"
+      },
+      {
+        "name": "Java",
+        "level": "60%"
+      },
+      {
+        "name": "SQL",
+        "level": "60%"
+      },
+      {
+        "name": "MongoDB",
+        "level": "50%"
+      }
+    ]
+  },
+  "portfolio": {
+    "projects": []
+  },
+  "gallery":{
+    "albums": [
+      {"title": "Costa Rica", "thumbnail": "20210818_105144.jpg", "url": "/CostaRica"},
+      {"title": "San Diego", "thumbnail": "Asset0013.jpg", "url": "/SanDiego"},
+      {"title": "Lily", "thumbnail": "Bumblebee.jpg", "url": "/Lily"}
+    ]
+  }
+}

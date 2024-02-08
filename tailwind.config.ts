@@ -1,20 +1,37 @@
-import type { Config } from "tailwindcss";
-
-const config: Config = {
-  content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+/** @type {import('tailwindcss').Config} */
+import flowbite from "flowbite/plugin";
+export const darkMode = 'media';
+export const content = {
+  relative: true,
+  files: [
+    './node_modules/flowbite-react/**/*.js',
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  theme: {
-    extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-      },
+};
+export const theme = {
+  extend: {
+    backgroundImage: {
+      'header': 'url("/images/header-background.jpg")',
+    },
+    fontFamily: {
+      open_sans: ['var(--font-open-sans)'],
+      libre_baskerville: ['var(--font-libre-baskerville)']
     },
   },
-  plugins: [],
+  colors: {
+    foreground: 'rgb(var(--foreground-rgb) / <alpha-value>)',
+    background: 'rgb(var(--background-rgb) / <alpha-value>)',
+    primary: 'rgb(var(--color-primary) / <alpha-value>)',
+    secondary: 'rgb(var(--color-secondary) / <alpha-value>)',
+    altBackground: 'rgb(var(--color-alt-background) / <alpha-value>)',
+    accent: 'rgb(var(--color-accent) / <alpha-value>)',
+  },
+  corePlugins: {
+    preflight: false,
+  },
 };
-export default config;
+export const plugins = [
+  flowbite
+];
