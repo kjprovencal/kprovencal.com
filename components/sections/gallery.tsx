@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from 'next/image';
-import { AlbumType } from "../../../lib/resumeEntry";
+import { AlbumType } from "../../lib/resumeEntry";
 
 function Album({ album }: { album: AlbumType }) {
   const albumLink = '/albums' + album.url;

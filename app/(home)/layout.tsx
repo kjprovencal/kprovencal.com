@@ -3,7 +3,7 @@ import Footer from "../../components/layout/footer";
 import Header from "../../components/layout/header";
 import SectionWrapper from "../../components/layout/wrapper";
 import SectionProvider from "./section-provider";
-import { Section } from "./sections";
+import { Section } from "../../components/sections";
 
 export default function HomeLayout({ children }: { children: React.ReactNode }) {
   

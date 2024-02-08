@@ -3,10 +3,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button } from 'flowbite-react';
 import { FaGithub, FaInstagram, FaLink, FaLinkedin } from 'react-icons/fa';
 import Link from 'next/link';
-import resumeData from '../../../lib/resumeData.json';
-import { submitContactForm } from '../../actions';
-import Error, { reset } from '../../../components/error';
-import { Error as AppError } from '../../../utils/types';
+import resumeData from '../../lib/resumeData.json';
+import { submitContactForm } from '../../app/actions';
+import Error, { reset } from '../error';
+import { Error as AppError } from '../../utils/types';
 
 export class ContactInfo {
   name: string = '';

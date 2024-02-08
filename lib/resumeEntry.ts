@@ -27,8 +27,8 @@ export class WorkEntry extends ResumeEntry {
   company: string;
   description: string;
   title: string;
-  start: DateTime;
-  end: DateTime;
+  start: Date;
+  end: Date;
   years: string;
 
   constructor(data: any) {

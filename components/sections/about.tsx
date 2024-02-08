@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { FaDownload } from 'react-icons/fa';
-import resumeData from '../../../lib/resumeData.json';
-import type { ResumeMainData } from '../../../utils/types';
+import resumeData from '../../lib/resumeData.json';
+import type { ResumeMainData } from '../../utils/types';
 
 export default function About() {
    const mainData: ResumeMainData = resumeData.main;

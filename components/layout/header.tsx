@@ -1,5 +1,5 @@
 import Navbar from "./navbar";
-import Headline from "../../app/(home)/sections/headline";
+import Headline from "../sections/headline";
 
 export default function Header({ home }: { home: boolean }) {
   return (

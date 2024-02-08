@@ -1,10 +1,10 @@
-import About from './sections/about'
-import Resume from './sections/resume'
-import Gallery from './sections/gallery'
+import About from '../../components/sections/about'
+import Resume from '../../components/sections/resume'
+import Gallery from '../../components/sections/gallery'
 import { Suspense } from 'react'
-import Contact from './sections/contact'
+import Contact from '../../components/sections/contact'
 import SectionWrapper from '../../components/layout/wrapper'
-import { Section } from "./sections"
+import { Section } from "../../components/sections"
 import { EducationEntry, WorkEntry, SkillsEntry, AlbumType } from '@/lib/resumeEntry'
 
 async function fetchResumeData() {
@@ -28,7 +28,7 @@ async function fetchResumeData() {
   };
 }
 
-export default async function Home() {
+export default async function Home({}) {
   const { educationData, workData, skillsData, albumsData } = await fetchResumeData();
   return (
     <main>
