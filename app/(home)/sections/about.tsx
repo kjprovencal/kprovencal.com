@@ -15,7 +15,11 @@ export default function About() {
             <h2 className="font-open_sans font-bold text-xl mb-3 text-background dark:text-foreground">
                About Me
             </h2>
-            <p className="leading-8 text-secondary mb-8">{mainData.bio}</p>
+            <>{
+               mainData.bio.map((paragraph, i) => {
+                  return <p key={i} className="leading-8 text-secondary mb-8">{paragraph}</p>;
+               })
+            }</>
             <div className="w-auto max-w-none my-0">
                <div className="w-[42%] relative py-0 float-left">
                   <h2 className="font-open_sans font-bold text-xl mb-3 text-background dark:text-foreground">

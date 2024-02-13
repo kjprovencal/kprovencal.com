@@ -3,14 +3,12 @@ import Resume from './sections/resume'
 import Gallery from './sections/gallery'
 import { Suspense } from 'react'
 import Contact from './sections/contact'
-import SectionWrapper from '../../components/layout/wrapper'
+import SectionWrapper from '@/components/layout/wrapper'
 import { Section } from "./sections"
-import { EducationEntry, WorkEntry, SkillsEntry, AlbumType } from '@/lib/resume-entry'
 import fetchAbsolute from '@/utils/fetch-absolute'
 
 async function fetchResumeData() {
   try {
-    const apiUrl = process.env.PB_URL ?? 'localhost:8090';
     const data = await Promise.all([
       fetchAbsolute('/api/resume/education?sort=-graduated').then(res => res.json()),
       fetchAbsolute('/api/resume/work?sort=-end').then(res => res.json()),

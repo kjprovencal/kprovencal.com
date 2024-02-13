@@ -2,7 +2,7 @@ import Link from 'next/link'
 import resumeData from '@/lib/resume-data.json';
 import { useMemo } from 'react';
 
-interface Network {
+type Network = {
   network: {
     url: string,
     className: string,

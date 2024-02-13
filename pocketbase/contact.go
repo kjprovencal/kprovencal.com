@@ -33,19 +33,18 @@ func checkSubmitted(data ...string) bool {
 
 func recordContact(data ...string) {
 	// record contact in database
-	res, err := app.Dao().DB().
+	_, err := app.Dao().DB().
 		Insert("contact", map[string]interface{}{"name": data[0], "email": data[1]}).
 		Execute()
 
 	if err != nil {
-		println(res)
+		app.Logger().Error("Error recording contact: " + err.Error())
 	}
 }
 
 func contact(c echo.Context) error {
 	admin, _ := c.Get(apis.ContextAdminKey).(*models.Admin)
 	record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
-
 	if isGuest := admin == nil && record == nil; isGuest {
 		if token := c.Request().Header.Get("Authorization"); token != "" {
 			data := apis.RequestInfo(c).Data
@@ -62,15 +61,21 @@ func contact(c echo.Context) error {
 			message := "New message from " + name + " <" + email + ">\n\n" + data["message"].(string) + "\n\n--\nSent from PocketBase\n"
 			// send me an email
 			if err := sendEmail(name, email, subject, message); err != nil {
+				app.Logger().Error("Error sending email: " + err.Error())
 				return apis.NewApiError(500, "Error sending email", err)
 			}
+			app.Logger().Info("Email sent. New contact: " + name + " <" + email + ">")
 			return c.JSON(200, map[string]interface{}{
 				"message": "Email sent",
 			})
 		} else {
-			// not authorized, return 401
-			return apis.NewUnauthorizedError("Unauthorized", nil)
+			app.Logger().Info("Unauthorized contact attempt")
 		}
 	}
-	return nil
+	if admin != nil {
+		app.Logger().Info("Admin is not allowed to contact.")
+	} else if record != nil {
+		app.Logger().Info("User is not allowed to contact.")
+	}
+	return apis.NewUnauthorizedError("Unauthorized", nil)
 }

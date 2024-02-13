@@ -1,19 +1,30 @@
 "use server"
 
 import fetchAbsolute from "@/utils/fetch-absolute";
-import { ContactInfo } from "./(home)/sections/contact";
-import { cookies } from 'next/headers'
-export async function submitContactForm(formData: FormData, state: any) {
+import { ContactInfo, ContactState } from "@/utils/types";
+import { cookies } from 'next/headers';
+
+
+export async function submitContactForm(prevState: ContactState, formData: FormData): Promise<ContactState> {
   // prevent spamming
+  if ((prevState?.canSubmit || false) === false) {
+    return {
+      ...prevState,
+      canSubmit: false,
+      error: { message: 'Unauthorized', status: 401 }
+    };
+  }
   const lastSubmit = cookies().get('contactFormLastSubmit')?.value;
   if (lastSubmit) {
     const lastSubmitDate = new Date(lastSubmit);
     const now = new Date();
     const diff = now.getTime() - lastSubmitDate.getTime();
     if (diff < 1000 * 60 * 60 * 24 * 7) {
-      state.setCanSubmit(false);
-      state.setError({message: 'You can only submit the form once a week', status: 400});
-      return;
+      return {
+        ...prevState,
+        canSubmit: false,
+        error: { message: 'You have already submitted this form.', status: 400 }
+      };
     }
     console.log('last submit', lastSubmitDate);
   }
@@ -23,35 +34,46 @@ export async function submitContactForm(formData: FormData, state: any) {
     subject: formData.get('subject') as string,
     message: formData.get('message') as string,
   };
-  state.setIsPosting(true);
   const recpatcha = await fetchAbsolute('/api/validate');
   if (recpatcha.status === 400) {
-    state.setError({message: 'Recaptcha failed', status: 400});
-    state.setIsPosting(false);
-    state.setCanSubmit(false);
-    return;
+    return {
+      ...prevState,
+      canSubmit: false,
+      error: { message: 'Recaptcha failed', status: 400 }
+    };
   } else if (recpatcha.status === 500) {
-    state.setError({message: 'Recaptcha not loaded', status: 500});
-    state.setIsPosting(false);
-    return;
+    return {
+      ...prevState,
+      canSubmit: false,
+      error: { message: 'Recaptcha not validated', status: 500 }
+    };
   }
 
-  fetchAbsolute('/api/contact', {
+  const contactRes = await fetchAbsolute('/api/contact', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(contactInfo)
   }).catch(err => {
-    if (err.status === 400) {
-      state.setError({message: 'Unauthorized', status: 400});
-      state.setCanSubmit(false);
-    } else {
-      state.setError({message: 'Email not sent', status: 500});
+    {
+      return {
+        ...prevState,
+        canSubmit: false,
+        error: { message: 'Failed to send email', status: 500 }
+      };
+
     }
   }).then(res => {
-    if (res && res.status === 200) {
+    const error = { message: 'Failed to send email', status: 500 };
+    if ((res instanceof Response && res.status === 200) || ((res as ContactState).error?.status === 200)) {
       cookies().set('contactFormLastSubmitted', new Date().toISOString());
-      state.setError({message: 'Email sent', status: 200 });
-      state.setCanSubmit(false);
+      error.message = 'Email sent successfully';
+      error.status = 200;
     }
-  }).finally(() => state.setIsPosting(false));
+    return {
+      ...prevState,
+      canSubmit: error.status !== 200,
+      error
+    };
+  });
+  return contactRes;
 }

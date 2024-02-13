@@ -1,6 +1,22 @@
 import { SectionState } from "../app/(home)/sections";
 import PocketBase from 'pocketbase';
 
+export type ContactInfo = {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+export type ContactState = {
+  contactInfo: ContactInfo;
+  canSubmit: boolean;
+  error: {
+    message: string;
+    status: number;
+  };
+};
+
 export type PBContextType = {
   pb: PocketBase;
 };
@@ -21,7 +37,7 @@ export type ResumeMainData = {
   occupation: string;
   description: string;
   image: string;
-  bio: string;
+  bio: Array<string>;
   contactMessage: string;
   email: string;
   phone: string;
@@ -33,10 +49,6 @@ export type ResumeMainData = {
   website: string;
   resumeDownload: string;
   social: Array<SocialType>;
-};
-
-export type ResumeParams = {
-  slug: string;
 };
 
 export type Error = {

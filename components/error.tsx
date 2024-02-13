@@ -1,9 +1,6 @@
 import { Alert } from "flowbite-react";
+import { Dispatch, SetStateAction } from "react";
 import { FaCircleExclamation } from "react-icons/fa6";
-
-export function reset() {
-  return { message: '', status: 0 };
-}
 
 export default function Error({ title, message, onDismiss }: { title?: string; message?: string; onDismiss?: () => void }) {
   return (
@@ -11,4 +8,8 @@ export default function Error({ title, message, onDismiss }: { title?: string; m
       <span className="font-bold">{title}</span> {message}
     </Alert>
   );
+}
+
+export function handleDismissError<s>(setState: Dispatch<SetStateAction<s>>) {
+  setState((prev: s) => ({ ...prev, error: { message: '', status: 0 } }));
 }
