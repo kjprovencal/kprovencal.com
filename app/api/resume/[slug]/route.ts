@@ -1,6 +1,6 @@
-import { EDUCATION, SKILL, WORK, ALBUM } from '@/utils/constants';
+import { EDUCATION, SKILL, WORK } from '@/utils/constants';
 import { monthYear } from '@/utils/date-format';
-import { AlbumType, EducationEntry, SkillsEntry, WorkEntry, ResumeEntry } from '@/lib/resume-entry';
+import { EducationEntry, SkillsEntry, WorkEntry, Record } from '@/lib/record';
 import { type NextRequest } from 'next/server';
 
 function buildEntry(r: any, slug: string) {
@@ -11,12 +11,12 @@ function buildEntry(r: any, slug: string) {
       r.description ??= '';
       r.graduated = r.graduated ? monthYear(new Date(r.graduated)) : 'N/A';
       r.school ??= '';
-      e = r as unknown as EducationEntry;
+      e = r as EducationEntry;
       break;
     case SKILL:
       r.name ??= '';
       r.level ??= 0;
-      e = r as unknown as SkillsEntry;
+      e = r as SkillsEntry;
       break;
     case WORK:
       const years = `${monthYear(new Date(r.start))} - ${r.end ? monthYear(new Date(r.end)) : 'Present'}`;
@@ -24,31 +24,23 @@ function buildEntry(r: any, slug: string) {
       r.description ??= '';
       r.title ??= '';
       r.years = years;
-      e = r as unknown as WorkEntry;
-      break;
-    case ALBUM:
-      r.id ??= '';
-      r.title ??= '';
-      r.url ??= '';
-      r.thumbnail = `${process.env.PB_URL}/api/files/${r.collectionId}/${r.id}/${r.thumbnail}`;
-      e = r as unknown as AlbumType;
+      e = r as WorkEntry;
       break;
     default:
       throw new Error('Invalid collection');
   }
-  return e as ResumeEntry;
+  return e as Record;
 }
 
 
 export async function GET(request: NextRequest, { params }: { params: { slug: string } }) {
   const { slug } = params;
   const sort = request.nextUrl.searchParams.get('sort') ?? '-created';
-  console.log('auth', process.env.PB_API_KEY)
   const res = await fetch(`${process.env.PB_URL}/api/collections/${slug}/records?sort=${sort}`, { headers: { 'Authorization': process.env.PB_API_KEY || '' } });
   const results = await res.json();
   if (!results.items) { throw results.message };
 
-  const entries: ResumeEntry[] = [];
+  const entries: Record[] = [];
 
   results.items.forEach((r: any) => {
     entries.push(buildEntry(r, slug));

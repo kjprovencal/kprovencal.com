@@ -4,11 +4,11 @@ export function FormField({ label, name, required = false, type = 'text' }: { la
     <div className='mb-4 flex flex-col'>
       <label htmlFor={name} className='font-open_sans font-bold text-sm inline-block float-left'>
         {label}
-        {required && <span className='text-xs text-orange-400'> *</span>}
+        {required && <span className='text-xs text-tiger'> *</span>}
       </label>
       {type === 'textarea' ?
-        <textarea className='px-3 py-2 text-sm text-secondary rounded-md' /> :
-        <input type={type} id={name} name={name} className='px-3 py-2 text-sm text-secondary rounded-md' aria-label={name} required={required} />}
+        <textarea className='px-3 py-2 text-sm dark:text-tiger rounded-md' /> :
+        <input type={type} id={name} name={name} className='px-3 py-2 text-sm dark:text-tiger rounded-md' aria-label={name} required={required} />}
     </div>
   );
 }

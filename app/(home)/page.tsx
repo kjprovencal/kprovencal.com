@@ -1,57 +1,26 @@
-import About from './sections/about'
-import Resume from './sections/resume'
-import Gallery from './sections/gallery'
-import { Suspense } from 'react'
-import Contact from './sections/contact'
-import SectionWrapper from '@/components/layout/wrapper'
-import { Section } from "./sections"
-import fetchAbsolute from '@/utils/fetch-absolute'
+import resumeData from '@/lib/resume-data.json';
+import { ResumeMainData } from '@/utils/types';
+import { SocialMediaLink } from '@/components/social-media-link';
 
-async function fetchResumeData() {
-  try {
-    const data = await Promise.all([
-      fetchAbsolute('/api/resume/education?sort=-graduated').then(res => res.json()),
-      fetchAbsolute('/api/resume/work?sort=-end').then(res => res.json()),
-      fetchAbsolute('/api/resume/skill?sort=-level').then(res => res.json()),
-      fetchAbsolute('/api/resume/album').then(res => res.json()),
-    ]);
-    return {
-      educationData: data[0] ?? [],
-      workData: data[1] ?? [],
-      skillsData: data[2] ?? [],
-      albumsData: data[3] ?? []
-    };
-  } catch (error) {
-    console.error('Error fetching resume data', error);
-    return {
-      educationData: [],
-      workData: [],
-      skillsData: [],
-      albumsData: []
-    };
-  }
-}
-
-export default async function Home({ }) {
-  const { educationData, workData, skillsData, albumsData } = await fetchResumeData();
+export default async function Home() {
+  const mainData: ResumeMainData = resumeData.main;
   return (
-    <main>
-      <SectionWrapper section={Section.About}>
-        <About />
-      </SectionWrapper>
-      <Suspense>
-        <SectionWrapper section={Section.Resume}>
-          <Resume data={{ educationData, workData, skillsData }} />
-        </SectionWrapper>
-      </Suspense>
-      <SectionWrapper section={Section.Gallery}>
-        <Suspense>
-          <Gallery data={albumsData} />
-        </Suspense>
-      </SectionWrapper>
-      <SectionWrapper section={Section.Contact}>
-        <Contact />
-      </SectionWrapper>
+    <main className="bg-center bg-no-repeat bg-cover bg-header bg-blend-multiply">
+      <div className="px-4 mx-auto max-w-screen-xl text-center py-24 lg:py-56">
+        <h1 className="mb-4 text-7xl tracking-wide leading-none text-white md:text-[80px] lg:text-8xl font-bold text-shadow-lg">Hello!</h1>
+        <p className="mx-auto my-0 w-[70%] text-lg text-shadow-xl font-libre_baskerville font-normal text-white lg:text-xl">{mainData.description}</p>
+        <ul className="social py-6 text-white">
+          <li className="inline-block mx-2">
+            <SocialMediaLink name="linkedin" />
+          </li>
+          <li className="inline-block mx-2">
+            <SocialMediaLink name="instagram" />
+          </li>
+          <li className="inline-block mx-2">
+            <SocialMediaLink name="github" />
+          </li>
+        </ul>
+      </div>
     </main>
   );
 }

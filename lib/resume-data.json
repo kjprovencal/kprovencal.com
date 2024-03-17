@@ -9,30 +9,19 @@
       "I created this website to showcase my work and share my experiences. It is built using Next.js 14 and Pocketbase, and is hosted on a Digital Ocean droplet. I'm always looking to learn new technologies and improve my skills, so I'm excited to continue working on this project and others. If you have any questions or would like to get in touch, please reach out using the contact form below. I'm also active on social media, so feel free to connect with me there."
     ],
     "contactMessage": "Please reach out on social media or contact me using the form below.",
-    "email": "kjprovencal@gmail.com",
-    "phone": "207-409-7776",
-    "address": {
-      "city": "Portland",
-      "state": "ME",
-      "zip": "04101"
-    },
-    "website": "http://www.kjprovencal.github.io",
     "resumeDownload": "resume.pdf",
     "social": [
       {
         "name": "linkedin",
-        "url": "https://www.linkedin.com/in/kyle-provencal-0748a616b/",
-        "className": "fa fa-linkedin"
+        "url": "https://www.linkedin.com/in/kyle-provencal-0748a616b/"
       },
       {
         "name": "instagram",
-        "url": "https://www.instagram.com/kjprovencal/",
-        "className": "fa fa-instagram"
+        "url": "https://www.instagram.com/kjprovencal/"
       },
       {
         "name": "github",
-        "url": "https://github.com/kjprovencal",
-        "className": "fa fa-github"
+        "url": "https://github.com/kjprovencal"
       }
     ]
   },

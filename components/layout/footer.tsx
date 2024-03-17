@@ -1,38 +1,14 @@
-import Link from 'next/link'
 import resumeData from '@/lib/resume-data.json';
-import { useMemo } from 'react';
-
-type Network = {
-  network: {
-    url: string,
-    className: string,
-    name: string
-  }
-};
-
-function NetworkLink({ network }: Network) {
-  const { className, name, url } = network;
-  return <li>
-    <Link href={url} title={name}>
-      <i className={className}></i>
-    </Link>
-  </li>;
-}
+import { FaChevronCircleUp } from 'react-icons/fa';
+import { SocialMediaLink } from '../social-media-link';
 
 export default function Footer({ home }: { home?: boolean }) {
-  const networks = useMemo(() => {
-    return resumeData.main.social.map((network) => <NetworkLink key={network.name} network={network} />);
-  }, []);
-
   return (
-    <footer>
-      <div className="row">
-        <div className="twelve columns">
-          <ul className="social-links">
-            {networks}
-          </ul>
-        </div>
-        {home && <div id="go-top"><a className="smoothscroll" title="Back to Top" href="#home"><i className="icon-up-open"></i></a></div>}
+    <footer className="text-center py-6 text-sm relative ">
+      <div className="w-full relative px-5 py-0 min-h-1 float-left">
+        <p className="text-xs text-tiger dark:text-cornsilk">
+          &copy; {new Date().getFullYear()} {resumeData.main.name}. All rights reserved.
+        </p>
       </div>
     </footer>
   );

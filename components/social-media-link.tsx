@@ -20,7 +20,7 @@ export function SocialMediaLink({ name }: { name: string; }) {
   }, [name]);
 
   return !!social?.url && (
-    <Link href={social.url} className='text-4xl text-background dark:text-foreground px-1'>
+    <Link href={social.url} className='text-4xl px-1 hover:text-tiger'>
       {icon}
     </Link>
   );

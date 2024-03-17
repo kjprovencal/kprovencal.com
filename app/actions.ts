@@ -1,6 +1,6 @@
 "use server"
 
-import fetchAbsolute from "@/utils/fetch-absolute";
+import fetchRelative from "@/utils/fetch-absolute";
 import { ContactInfo, ContactState } from "@/utils/types";
 import { cookies } from 'next/headers';
 
@@ -34,7 +34,7 @@ export async function submitContactForm(prevState: ContactState, formData: FormD
     subject: formData.get('subject') as string,
     message: formData.get('message') as string,
   };
-  const recpatcha = await fetchAbsolute('/api/validate');
+  const recpatcha = await fetchRelative('/api/validate');
   if (recpatcha.status === 400) {
     return {
       ...prevState,
@@ -49,7 +49,7 @@ export async function submitContactForm(prevState: ContactState, formData: FormD
     };
   }
 
-  const contactRes = await fetchAbsolute('/api/contact', {
+  const contactRes = await fetchRelative('/api/contact', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(contactInfo)

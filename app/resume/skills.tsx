@@ -1,13 +1,13 @@
-import { SkillsEntry } from "@/lib/resume-entry";
+import { SkillsEntry } from "@/lib/record";
 import resumeData from '@/lib/resume-data.json';
 
 function SkillRow({ data }: { data: SkillsEntry }) {
 
   return (
-    <li key={data.name} className="relative mb-[60px] bg-[#ccc] h-10 rounded-sm">
-      <em className="font-open_sans font-bold uppercase not-italic text-accent dark:text-foreground text-sm tracking-widest relative -top-9">{data.name}</em>
+    <li key={data.name} className="relative mb-[60px] bg-pakistan dark:bg-cornsilk h-10 rounded-sm">
+      <em className="font-open_sans font-bold uppercase not-italic text-sm tracking-widest relative -top-9">{data.name}</em>
       <span
-        className={"absolute left-0 top-0 m-0 pr-6 bg-altBackground inline-block h-10 leading-10 rounded-l-sm"}
+        className={"absolute bg-tiger left-0 top-0 m-0 pr-6 inline-block h-10 leading-10 rounded-l-sm"}
         style={{ width: `${data.level}%`}}
       />
     </li>

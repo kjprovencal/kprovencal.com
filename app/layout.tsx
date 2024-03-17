@@ -1,5 +1,8 @@
-import './globals.css';
+import { Metadata } from 'next';
 import { Libre_Baskerville, Open_Sans } from 'next/font/google';
+import './globals.css';
+import Navbar from '@/components/layout/navbar';
+import Footer from '@/components/layout/footer';
 
 const openSans = Open_Sans({
   subsets: ['latin'],
@@ -16,6 +19,10 @@ const libreBaskerville = Libre_Baskerville({
   variable: '--font-libre-baskerville'
 });
 
+export const metadata: Metadata = {
+  title: "Kyle's Personal Website",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -27,8 +34,12 @@ export default function RootLayout({
         <head /> will contain the components returned by the nearest parent head.tsx. Find out more at https://beta.nextjs.org/docs/api-reference/file-conventions/head
       */}
       <head />
-      <body>
+      <body className='bg-cornsilk dark:bg-pakistan text-coffee dark:text-cornsilk h-screen'>
+        <header>
+          <Navbar />
+        </header>
         {children}
+        <Footer />
       </body>
     </html>
   )

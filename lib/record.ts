@@ -1,6 +1,4 @@
-import { EDUCATION, SKILL, WORK, ALBUM } from "@/utils/constants";
-
-export class ResumeEntry {
+export class Record {
   id: string;
   collectionId: string;
   constructor(data: any) {
@@ -8,7 +6,7 @@ export class ResumeEntry {
     this.collectionId = data.collectionId;
   }
 }
-export class EducationEntry extends ResumeEntry {
+export class EducationEntry extends Record {
   degree: string;
   description: string;
   school: string;
@@ -23,7 +21,7 @@ export class EducationEntry extends ResumeEntry {
   }
 };
 
-export class WorkEntry extends ResumeEntry {
+export class WorkEntry extends Record {
   company: string;
   description: string;
   title: string;
@@ -42,7 +40,7 @@ export class WorkEntry extends ResumeEntry {
   }
 };
 
-export class SkillsEntry extends ResumeEntry {
+export class SkillsEntry extends Record {
   level: number;
   name: string;
   constructor(data: any) {
@@ -52,7 +50,7 @@ export class SkillsEntry extends ResumeEntry {
   }
 };
 
-export class AlbumType extends ResumeEntry {
+export class AlbumType extends Record {
   id: string;
   title: string;
   url: string;
@@ -65,18 +63,3 @@ export class AlbumType extends ResumeEntry {
     this.thumbnail = data.thumbnail;
    }
 };
-
-export default function createEntry(type: string, data: any) : any {
-  switch (type) {
-    case EDUCATION:
-      return new EducationEntry(data);
-    case SKILL:
-      return new SkillsEntry(data);
-    case WORK:
-      return new WorkEntry(data);
-    case ALBUM:
-      return new AlbumType(data);
-    default:
-      return null;
-  }
-}
