@@ -1,7 +1,6 @@
 "use client"
 import { useEffect, useMemo, useState } from 'react';
 import { useFormState } from 'react-dom';
-import { Button } from 'flowbite-react';
 import resumeData from '@/lib/resume-data.json';
 import { submitContactForm } from '@/app/actions';
 import Error, { handleDismissError } from '@/components/error';
@@ -55,7 +54,7 @@ export default function Contact() {
             {!!contactState.error?.status &&
               <Error title='Error' message={contactState.error?.message} onDismiss={() => handleDismissError(setContactState)} />}
             <div className='flex '>
-              <Button type='submit' disabled={!contactState.canSubmit} className='dark:bg-cornsilk dark:text-tiger dark:hover:bg-tiger dark:hover:text-cornsilk bg-tiger text-cornsilk hover:bg-pakistan w-1/5'>Submit</Button>
+              <button type='submit' disabled={!contactState.canSubmit} className='dark:bg-cornsilk dark:text-tiger dark:hover:bg-tiger dark:hover:text-cornsilk bg-tiger text-cornsilk hover:bg-pakistan w-1/5'>Submit</button>
               <div className='flex-grow'></div>
               <div className='flex flex-row'>
                 <SocialMediaLink name='linkedin' />
