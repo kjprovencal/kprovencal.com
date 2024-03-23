@@ -1,18 +1,22 @@
-import { load } from "recaptcha-v3";
+const verifyEndpoint = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
-export async function GET() {
-  if (process.env.NODE_ENV === 'production') {
-    try {
-      const recaptcha = await load(process.env.RECAPTCHA_CLIENT_KEY || '');
-      const token = await recaptcha.execute('contact');
-      if (!token) throw new Error('Recaptcha failed');
-    } catch (err) {
-      if ((err as Error).message === 'Recaptcha failed') {
-        return new Response('Recaptcha failed', { status: 400 });
-      } else {
-        return new Response('Recaptcha not loaded', { status: 500 });
-      }
+export async function POST(request: Request) {
+  const { token } = await request.json();
+
+  const res = await fetch(verifyEndpoint, {
+    method: 'POST',
+    body: `secret=${encodeURIComponent(process.env.TURNSTILE_SECRET_KEY || '')}&response=${encodeURIComponent(token)}`,
+    headers: {
+      'content-type': 'application/x-www-form-urlencoded'
     }
-  }
-  return new Response('Recaptcha validated');
+  });
+
+  const data = await res.json();
+
+  return new Response(JSON.stringify(data), {
+    status: data.success ? 200 : 400,
+    headers: {
+      'content-type': 'application/json'
+    }
+  });
 }

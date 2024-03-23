@@ -1,5 +1,4 @@
 "use server"
-
 import fetchRelative from "@/utils/fetch-absolute";
 import { ContactInfo, ContactState } from "@/utils/types";
 import { cookies } from 'next/headers';
@@ -26,7 +25,6 @@ export async function submitContactForm(prevState: ContactState, formData: FormD
         error: { message: 'You have already submitted this form.', status: 400 }
       };
     }
-    console.log('last submit', lastSubmitDate);
   }
   const contactInfo: ContactInfo = {
     name: formData.get('name') as string,
@@ -34,18 +32,20 @@ export async function submitContactForm(prevState: ContactState, formData: FormD
     subject: formData.get('subject') as string,
     message: formData.get('message') as string,
   };
-  const recpatcha = await fetchRelative('/api/validate');
-  if (recpatcha.status === 400) {
+
+  const token = formData.get('cf-turnstile-response');
+  const res = await fetchRelative('/api/validate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token })
+  });
+
+  const data = await res.json();
+  if (!data.success) {
     return {
       ...prevState,
       canSubmit: false,
-      error: { message: 'Recaptcha failed', status: 400 }
-    };
-  } else if (recpatcha.status === 500) {
-    return {
-      ...prevState,
-      canSubmit: false,
-      error: { message: 'Recaptcha not validated', status: 500 }
+      error: { message: 'Failed to validate form', status: 400 }
     };
   }
 

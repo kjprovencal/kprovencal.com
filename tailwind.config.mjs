@@ -28,6 +28,3 @@ export const theme = {
     preflight: false,
   },
 };
-export const plugins = [
-  require('flowbite/plugin')
-];
