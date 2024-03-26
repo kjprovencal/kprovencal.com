@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	_ "pocketbase/pb_migrations"
+
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase"
@@ -23,8 +25,8 @@ func main() {
 		log.Fatal("Error getting current directory: " + err.Error())
 	}
 
-	if err := godotenv.Load(dir + "/pocketbase/.env"); err != nil {
-		log.Fatal("Error loading .env file: " + err.Error())
+	if err := godotenv.Load(dir + "pb/.env"); err != nil {
+		log.Fatal("Error loading .env file: " + err.Error() + "Directory: " + dir)
 	}
 	// loosely check if it was executed using "go run"
 	isGoRun := strings.HasPrefix(os.Args[0], os.TempDir())

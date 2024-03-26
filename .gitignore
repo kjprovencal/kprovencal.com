@@ -26,7 +26,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
+/pocketbase/errors.log
 # local env files
 .env*.local
 *.sendgrid.env
