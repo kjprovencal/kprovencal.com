@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from 'next/image';
 import { AlbumType } from "@/lib/record";
 import { Suspense } from "react";
-import fetchRelative from "@/utils/fetch-absolute";
+import fetchAlbums from "./fetch";
 
 function Album({ album }: { album: AlbumType }) {
   const albumLink = '/albums' + album.url;
@@ -21,7 +21,7 @@ function Album({ album }: { album: AlbumType }) {
 }
 
 async function Content() {
-  const data = await fetchRelative('/api/gallery').then(res => res.json()).catch(err => {
+  const data = await fetchAlbums().then(res => res).catch(err => {
     console.error(err);
     return [];
   });

@@ -14,7 +14,7 @@ function ResumeSection({ title, children }: { title: string; children: React.Rea
     <div className="w-[96%] max-w-5xl h-fit mx-auto mt-6 pt-6 pb-6 border-b border-gray-200 before:table after:table after:clear-both">
       <div className="pt-2 w-1/4 relative px-5 py-0 min-h-[1px] float-left">
         <h1 className="uppercase tracking-widest text-lg font-bold">
-          <span className="border-b-2 border-green-800 pb-1">
+          <span className="border-b-2 border-tiger pb-1">
             {title}
           </span>
         </h1>
@@ -74,7 +74,6 @@ async function fetchResumeData(): Promise<{ educationData: EducationEntry[]; wor
 export default async function Resume() {
   return (
     <main className="mt-20">
-      <Heading title={Section.Resume} />
       <Suspense fallback={<Loading />}>
         <Content />
       </Suspense>
