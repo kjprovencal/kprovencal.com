@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev --turbo\" \"./pocketbase/pocketbase serve\"",
+    "dev": "concurrently \"next dev --turbo\" \"cd pocketbase && ./pocketbase serve\"",
     "debug": "next dev --turbo",
     "build": "next build",
     "start": "next start",

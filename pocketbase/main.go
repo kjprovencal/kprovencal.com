@@ -25,8 +25,12 @@ func main() {
 		log.Fatal("Error getting current directory: " + err.Error())
 	}
 
-	if err := godotenv.Load(dir + "pb/.env"); err != nil {
-		log.Fatal("Error loading .env file: " + err.Error() + "Directory: " + dir)
+	if dir != "" && dir[len(dir)-1] == '/' {
+		dir = dir[:len(dir)-1]
+	}
+
+	if err := godotenv.Load(dir + "/.env"); err != nil {
+		log.Fatal("Error loading .env file: " + err.Error())
 	}
 	// loosely check if it was executed using "go run"
 	isGoRun := strings.HasPrefix(os.Args[0], os.TempDir())

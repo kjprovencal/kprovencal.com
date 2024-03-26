@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import Script from 'next/script';
 import { Libre_Baskerville, Open_Sans } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/layout/navbar';
