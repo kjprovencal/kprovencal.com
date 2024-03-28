@@ -46,31 +46,35 @@ func contact(c echo.Context) error {
 	admin, _ := c.Get(apis.ContextAdminKey).(*models.Admin)
 	record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
 	if isGuest := admin == nil && record == nil; isGuest {
-		if token := c.Request().Header.Get("Authorization"); token != "" {
-			data := apis.RequestInfo(c).Data
-			name := data["name"].(string)
-			email := os.Getenv("EMAIL")
+		data := apis.RequestInfo(c).Data
+		name := data["name"].(string)
+		email := data["email"].(string)
 
-			if checkSubmitted(name, email) {
-				return apis.NewApiError(400, "Contact already submitted", nil)
-			} else {
-				recordContact(name, email)
-			}
-
-			subject := data["subject"].(string)
-			message := "New message from " + name + " <" + email + ">\n\n" + data["message"].(string) + "\n\n--\nSent from PocketBase\n"
-			// send me an email
-			if err := sendEmail(name, email, subject, message); err != nil {
-				app.Logger().Error("Error sending email: " + err.Error())
-				return apis.NewApiError(500, "Error sending email", err)
-			}
-			app.Logger().Info("Email sent. New contact: " + name + " <" + email + ">")
-			return c.JSON(200, map[string]interface{}{
-				"message": "Email sent",
-			})
+		if checkSubmitted(name, email) {
+			return apis.NewApiError(400, "Contact already submitted", nil)
 		} else {
-			app.Logger().Info("Unauthorized contact attempt")
+			recordContact(name, email)
 		}
+
+		subject := data["subject"].(string)
+		message := "New message from " + name + " <" + email + ">\n\n"
+
+		if data["message"] != nil {
+			message += data["message"].(string)
+		}
+
+		message += "\n\n--\nSent from PocketBase\n"
+
+		// send me an email
+		if err := sendEmail(name, email, subject, message); err != nil {
+			app.Logger().Error("Error sending email: " + err.Error())
+			return apis.NewApiError(500, "Error sending email", err)
+		}
+
+		app.Logger().Info("Email sent. New contact: " + name + " <" + email + ">")
+		return c.JSON(200, map[string]interface{}{
+			"message": "Email sent",
+		})
 	}
 	if admin != nil {
 		app.Logger().Info("Admin is not allowed to contact.")
@@ -79,3 +83,4 @@ func contact(c echo.Context) error {
 	}
 	return apis.NewUnauthorizedError("Unauthorized", nil)
 }
+

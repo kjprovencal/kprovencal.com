@@ -29,7 +29,7 @@ func main() {
 		dir = dir[:len(dir)-1]
 	}
 
-	if err := godotenv.Load(dir + "/.env"); err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("Error loading .env file: " + err.Error())
 	}
 	// loosely check if it was executed using "go run"

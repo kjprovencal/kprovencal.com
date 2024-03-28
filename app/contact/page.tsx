@@ -65,7 +65,7 @@ export default function Contact() {
                 <SocialMediaLink name='github' />
               </div>
             </div>
-            <Turnstile siteKey={process.env.TURNSTILE_SITE_KEY || ''} />
+            <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''} />
           </form>
         </div>
       </div>
