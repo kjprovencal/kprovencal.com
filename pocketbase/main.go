@@ -48,7 +48,7 @@ func main() {
 
 		e.Router.POST("/contact", contact)
 		e.Router.GET("/contact", func(c echo.Context) error {
-			err := sendEmail("Kyle", os.Getenv("EMAIL"), "Hello", "Hello, World!")
+			err := sendEmail("Kyle", "Hello", "Hello, World!")
 			if err != nil {
 				return apis.NewApiError(500, "Error sending email", err)
 			} else {
