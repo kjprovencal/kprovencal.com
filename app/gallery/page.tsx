@@ -31,7 +31,7 @@ async function Content() {
 }
 export default function Gallery() {
   return (
-    <main className="h-full flex items-center">
+    <main className="min-h-full flex items-center">
       <div className="w-[96%] max-w-5xl h-fit mx-auto mt-6 mb-12 py-6 before:table after:table after:clear-both">
         <div className="pt-2 relative py-0 min-h-[1px]">
           <h1 className="uppercase tracking-widest text-2xl font-bold text-center">

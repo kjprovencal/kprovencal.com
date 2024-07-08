@@ -5,8 +5,8 @@
     "description": "I'm Kyle Provencal, a software engineer and outdoor enthusiast from the beautiful state of Maine.",
     "image": "profilepic.jpg",
     "bio": [
-      "I graduated from the University of Massachusetts in Amherst with a BS in Computer Science in December 2021. I've been working at Reconnect, Inc. since September 2022 as a support engineer and full-stack developer. In my free time, I enjoy hiking, skiing, and other outdoor activities.",
-      "I created this website to showcase my work and share my experiences. It is built using Next.js 14 and Pocketbase, and is hosted on a Digital Ocean droplet. I'm always looking to learn new technologies and improve my skills, so I'm excited to continue working on this project and others. If you have any questions or would like to get in touch, please reach out using the contact form below. I'm also active on social media, so feel free to connect with me there."
+      "I graduated from the University of Massachusetts in Amherst with a BS in Computer Science in December 2021. I've been working at Reconnect, Inc. since September 2022; first, as a support engineer, and since March 2024 as a full-stack developer. In my free time, I enjoy hiking, skiing, and other outdoor activities.",
+      "I created this website to showcase my work and share my experiences. It is built using Next.js 14 and PocketBase, and is hosted on a Digital Ocean droplet. I'm always looking to learn new technologies and improve my skills, so I'm excited to continue working on this project and others. If you have any questions or would like to get in touch, please reach out using the contact form below. I'm also active on social media, so feel free to connect with me there."
     ],
     "contactMessage": "Please reach out on social media or contact me using the form below.",
     "resumeDownload": "resume.pdf",

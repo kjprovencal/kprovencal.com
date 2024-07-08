@@ -7,14 +7,11 @@ export async function POST(request: Request) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': process.env.PB_API_KEY || ''
     },
     body: JSON.stringify(contactInfo)
   });
   if (res.status === 200) {
     return new Response('Email sent', { status: 200 });
-  } else if (res.status < 500) {
-    return new Response('Unauthorized', { status: 400 });
   } else {
     return new Response('Email not sent', { status: res.status, statusText: res.statusText });
   }

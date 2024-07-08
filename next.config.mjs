@@ -7,6 +7,12 @@ const nextConfig = {
                 hostname: '127.0.0.1',
                 port: '8090',
                 pathname: '/api/files/**'
+            },
+            {
+                protocol: 'https',
+                hostname: 'api.kprovencal.com',
+                port: '',
+                pathname: '/api/files/**'
             }
         ]
     }

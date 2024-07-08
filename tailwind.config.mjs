@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const colors = require('tailwindcss/colors');
+
 export const darkMode = 'media';
 export const content = [
   './pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -16,6 +18,7 @@ export const theme = {
     },
   },
   colors: {
+    ...colors,
     moss: "#606C38",
     pakistan: "#283618",
     cornsilk: "#FEFAE0",

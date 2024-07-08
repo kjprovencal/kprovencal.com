@@ -3,8 +3,6 @@ import Experience from "./experience";
 import Skills from "./skills";
 import { EducationEntry, SkillsEntry, WorkEntry } from "@/lib/record";
 import { FaDownload } from "react-icons/fa";
-import Heading from "@/components/layout/heading";
-import { Section } from "@/utils/types";
 import fetchRelative from "@/utils/fetch-absolute";
 import { Suspense } from "react";
 import Loading from "@/components/loading";
@@ -12,15 +10,15 @@ import Loading from "@/components/loading";
 function ResumeSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="w-[96%] max-w-5xl h-fit mx-auto mt-6 pt-6 pb-6 border-b border-gray-200 before:table after:table after:clear-both">
-      <div className="pt-2 w-1/4 relative px-5 py-0 min-h-[1px] float-left">
-        <h1 className="uppercase tracking-widest text-lg font-bold">
+      <div className="pt-2 w-full sm:w-1/4 relative px-5 py-0 min-h-[1px] float-none sm:float-left text-center sm:text-baseline">
+        <h1 className="uppercase tracking-widest text-lg font-bold pb-3 sm:pb-0">
           <span className="border-b-2 border-tiger pb-1">
             {title}
           </span>
         </h1>
       </div>
-      <div className="pr-[10%] float-left w-3/4 relative pl-5 py-0 min-h-[1px] px-5 max-w-none mx-[-20px] my-0 table">
-        <div className="w-auto relative px-5 py-0 min-h-[1px] float-left max-w-none mx-[-20px] my-0 table">
+      <div className="sm:pr-[10%] float-none sm:float-left w-full sm:w-3/4 relative sm:pl-5 py-0 min-h-[1px] max-w-none sm:mx-[-20px] my-0 table">
+        <div className="w-auto relative sm:px-5 py-0 min-h-[1px] float-none sm:float-left max-w-none sm:mx-[-20px] my-0 table">
           {children}
         </div>
       </div>

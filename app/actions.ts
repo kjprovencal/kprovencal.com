@@ -33,20 +33,23 @@ export async function submitContactForm(prevState: ContactState, formData: FormD
     message: formData.get('message') as string,
   };
 
-  const token = formData.get('cf-turnstile-response');
-  const res = await fetchRelative('/api/validate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token })
-  });
+  // don't run validation in development
+  if (process.env.NODE_ENV !== 'development') {
+    const token = formData.get('cf-turnstile-response');
+    const res = await fetchRelative('/api/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
 
-  const data = await res.json();
-  if (!data.success) {
-    return {
-      ...prevState,
-      canSubmit: false,
-      error: { message: 'Failed to validate form', status: 400 }
-    };
+    const data = await res.json();
+    if (!data.success) {
+      return {
+        ...prevState,
+        canSubmit: false,
+        error: { message: 'Failed to validate form', status: 400 }
+      };
+    }
   }
 
   const contactRes = await fetchRelative('/api/contact', {
