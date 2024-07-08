@@ -11,9 +11,9 @@ import (
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-func sendEmail(name, email, subject, body string) error {
+func sendEmail(name, subject, body string) error {
 	// send email using SendGrid
-	from := mail.NewEmail(name, email)
+	from := mail.NewEmail(name, os.Getenv("SYS_EMAIL"))
 	to := mail.NewEmail(os.Getenv("NAME"), os.Getenv("EMAIL"))
 	plainTextContent := body
 	htmlContent := "<strong>" + html.EscapeString(body) + "</strong>"
@@ -66,7 +66,7 @@ func contact(c echo.Context) error {
 		message += "\n\n--\nSent from PocketBase\n"
 
 		// send me an email
-		if err := sendEmail(name, email, subject, message); err != nil {
+		if err := sendEmail(name, subject, message); err != nil {
 			app.Logger().Error("Error sending email: " + err.Error())
 			return apis.NewApiError(500, "Error sending email", err)
 		}
