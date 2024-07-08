@@ -109,7 +109,6 @@ export default function Navbar() {
         className={isOpen ? "space-y-1 px-2 pt-2 pb-3" : "hidden"}
         id="mobile-menu"
       >
-        <span>{`Navbar is: ${isOpen ? 'open' : 'closed'}`}</span>
         <ul>
           {sections.map((sec) => (
             <NavbarSection key={sec} section={sec} current={currentSection} />
