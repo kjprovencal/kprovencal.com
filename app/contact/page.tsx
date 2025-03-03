@@ -1,7 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useActionState } from "react";
 import { Turnstile } from "@marsidev/react-turnstile";
-import { useFormState } from "react-dom";
 import resumeData from "@/lib/resume-data.json";
 import { submitContactForm } from "@/app/actions";
 import Error, { handleDismissError } from "@/components/error";
@@ -25,15 +24,12 @@ const initialState: ContactState = {
 
 export default function Contact() {
   const [contactState, setContactState] = useState<ContactState>(initialState);
-  const [state, formAction] = useFormState<ContactState, FormData>(
+  const [state, formAction] = useActionState<ContactState, FormData>(
     submitContactForm,
     initialState
   );
 
-  useEffect(() => {
-    const newState = { ...state } as ContactState;
-    setContactState(newState);
-  }, [state]);
+  useEffect(() => setContactState({ ...state }), [state]);
 
   return (
     <main className="min-h-full flex items-center">
@@ -67,11 +63,11 @@ export default function Contact() {
               <button
                 type="submit"
                 disabled={!contactState.canSubmit}
-                className="dark:bg-cornsilk dark:text-tiger dark:hover:bg-tiger dark:hover:text-cornsilk bg-tiger text-cornsilk hover:bg-pakistan sm:w-1/5 rounded-sm mb-5 py-2"
+                className="dark:bg-cornsilk dark:text-tiger dark:hover:bg-tiger dark:hover:text-cornsilk bg-tiger text-cornsilk hover:bg-pakistan sm:w-1/5 rounded-xs mb-5 py-2"
               >
                 Submit
               </button>
-              <div className="sm:flex-grow"></div>
+              <div className="sm:grow"></div>
               <div className="flex flex-row">
                 <SocialMediaLink name="linkedin" />
                 <SocialMediaLink name="instagram" />
@@ -80,10 +76,12 @@ export default function Contact() {
             </div>
           </form>
         </div>
-        <Turnstile
-          className="flex justify-center items-center mx-auto"
-          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
-        />
+        {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+          <Turnstile
+            className="flex justify-center items-center mx-auto"
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+          />
+        )}
       </div>
     </main>
   );

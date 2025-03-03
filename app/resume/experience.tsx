@@ -19,7 +19,7 @@ export default function Experience({data}:{data: EducationEntry | WorkEntry }){
   return (
     <div key={`${location}_${time}`} className='text-center sm:text-left'>
       <h3 className="text-2xl font-bold ">{location}</h3>
-      <p className="text-base font-libre_baskerville italic mb-5 mt-2 sm:flex sm:flex-grow">{details}
+      <p className="text-base font-libre_baskerville italic mb-5 mt-2 sm:flex sm:grow">{details}
         <span className="mx-1">&bull;</span>
         <em className="text-base not-italic">{time}</em>
       </p>

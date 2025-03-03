@@ -11,7 +11,7 @@ const navbarVariants = {
   current: "text-tiger",
   nonCurrent: "text-pakistan dark:text-cornsilk hover:text-tiger",
   home: "text-white hover:text-tiger",
-  hamburger: "focus:outline-none",
+  hamburger: "focus:outline-hidden",
 };
 
 function useTailwindBreakpoint() {
@@ -83,10 +83,10 @@ export default function Navbar() {
           : "bg-cornsilk dark:bg-pakistan text-pakistan dark:text-cornsilk"
       }`}
     >
-      <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4 sm:hidden">
+      <div className="max-w-(--breakpoint-xl) flex flex-wrap items-center justify-between mx-auto p-4 sm:hidden">
         <button
           type="button"
-          className="relative inline-flex items-center justify-center p-2 w-10 h-10 text-sm rounded-lg md:hidden hover:bg-tiger focus:outline-none focus:ring-2 focus:ring-earth"
+          className="relative inline-flex items-center justify-center p-2 w-10 h-10 text-sm rounded-lg md:hidden hover:bg-tiger focus:outline-hidden focus:ring-2 focus:ring-earth"
           aria-controls="mobile-menu"
           aria-expanded="false"
           onClick={() => setIsOpen((prev) => !prev)}

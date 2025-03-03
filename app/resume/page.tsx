@@ -77,7 +77,7 @@ export default async function Resume() {
       </Suspense>
       <div className="w-auto max-w-none my-0 pt-9 min-h-[1px] flex justify-center">
         <p className="leading-8 text-secondary mb-8">
-          <a href={'/static/resume.pdf'} className="mt-2 mb-4 px-5 py-3 text-cornsilk bg-pakistan font-open_sans font-bold text-base/8 inline-flex items-center rounded"><FaDownload className="mr-4 text-xl" />Download Resume</a>
+          <a href={'/static/resume.pdf'} className="mt-2 mb-4 px-5 py-3 text-cornsilk bg-pakistan font-open_sans font-bold text-base/8 inline-flex items-center rounded-sm"><FaDownload className="mr-4 text-xl" />Download Resume</a>
         </p>
       </div>
     </main>
