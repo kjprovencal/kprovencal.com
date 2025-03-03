@@ -33,7 +33,7 @@ export default function Contact() {
 
   return (
     <main className="min-h-full flex items-center">
-      <div className="w-[96%] max-w-5xl h-fit mx-auto mt-12 py-6 before:table">
+      <div className="w-[96%] max-w-5xl h-fit mx-auto mt-12 py-6 before-table">
         <div className="pt-2 relative py-0 min-h-[1px] mb-8">
           <h1 className="uppercase tracking-widest text-2xl font-bold text-center">
             <span className="border-b-2 border-tiger pb-1">Get In Touch</span>

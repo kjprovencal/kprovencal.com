@@ -20,11 +20,11 @@
   }
 }
 
-.before:table::before, .after:table::after {
+.before-table::before, .after-table::after {
   content: ' ';
   display: table;
 }
 
-.after:clear-both::after {
+.after-clear-both::after {
   clear: both;
 }
