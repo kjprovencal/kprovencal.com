@@ -29,7 +29,9 @@ export default function Contact() {
     initialState
   );
 
-  useEffect(() => setContactState({ ...state }), [state]);
+  useEffect(() => {
+    setContactState({ ...state })
+  }, [state]);
 
   return (
     <main className="min-h-full flex items-center">

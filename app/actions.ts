@@ -1,7 +1,7 @@
 "use server"
 import fetchRelative from "@/utils/fetch-absolute";
 import { ContactInfo, ContactState } from "@/utils/types";
-import { cookies, type UnsafeUnwrappedCookies } from 'next/headers';
+import { cookies } from 'next/headers';
 
 
 export async function submitContactForm(prevState: ContactState, formData: FormData): Promise<ContactState> {
@@ -65,10 +65,10 @@ export async function submitContactForm(prevState: ContactState, formData: FormD
       };
 
     }
-  }).then(res => {
+  }).then(async res => {
     const error = { message: 'Failed to send email', status: 500 };
     if ((res instanceof Response && res.status === 200) || ((res as ContactState).error?.status === 200)) {
-      (cookies() as unknown as UnsafeUnwrappedCookies).set('contactFormLastSubmitted', new Date().toISOString());
+      (await cookies()).set('contactFormLastSubmitted', new Date().toISOString());
       error.message = 'Email sent successfully';
       error.status = 200;
     }

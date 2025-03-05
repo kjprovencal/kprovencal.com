@@ -7,8 +7,8 @@ export function FormField({ label, name, required = false, type = 'text' }: { la
         {required && <span className='text-xs text-tiger'> *</span>}
       </label>
       {type === 'textarea' ?
-        <textarea className='px-3 py-2 text-sm dark:text-tiger rounded-md' /> :
-        <input type={type} id={name} name={name} className='px-3 py-2 text-sm dark:text-tiger rounded-md' aria-label={name} required={required} />}
+        <textarea className='px-3 py-2 text-sm text-cornsilk dark:text-tiger rounded-md bg-earth dark:bg-cornsilk' /> :
+        <input type={type} id={name} name={name} className='px-3 py-2 text-sm text-cornsilk dark:text-tiger rounded-md bg-earth dark:bg-cornsilk' aria-label={name} required={required} />}
     </div>
   );
 }
