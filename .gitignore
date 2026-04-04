@@ -1,4 +1,5 @@
 node_modules
+coverage
 dist
 .DS_Store
 *.log
@@ -7,3 +8,4 @@ api/data/
 .env*
 !.env.example
 api/tmp/
+api/coverage.out

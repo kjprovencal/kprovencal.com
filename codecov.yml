@@ -1,0 +1,11 @@
+# https://docs.codecov.com/docs/codecov-yaml
+# Optional: set CODECOV_TOKEN in repo secrets for private repos or if uploads fail.
+
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true

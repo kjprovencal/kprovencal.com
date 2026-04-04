@@ -4,6 +4,22 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
+    coverage: {
+      provider: "v8",
+      reportsDirectory: "./coverage",
+      reporter: ["text", "text-summary", "lcov", "json-summary"],
+      include: ["src/**/*.ts"],
+      exclude: [
+        "**/node_modules/**",
+        "src/**/*.test.ts",
+        "src/vite-env.d.ts",
+        // App shell / DOM wiring — covered by manual or future E2E tests, not Vitest.
+        "src/main.ts",
+        "src/mount-admin.ts",
+        "src/mount-wedding-rsvp.ts",
+        "src/theme.ts",
+      ],
+    },
   },
   server: {
     port: 5173,

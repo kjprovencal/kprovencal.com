@@ -60,7 +60,16 @@ go build -o personal-site-api .
 go test ./...
 ```
 
-Vitest (markdown pipeline and small unit tests) runs from the **repository root**: `npm test`.
+With a coverage profile:
+
+```bash
+go test ./... -coverprofile=coverage.out -covermode=atomic
+go tool cover -func=coverage.out
+```
+
+Vitest runs from the **repository root**: `npm test`. HTML/LCOV coverage: `npm run test:coverage` (output in `coverage/`).
+
+**CI:** [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs the Go and frontend test suites with coverage on pushes to **`main`** / **`markdown`** and on pull requests. Reports are uploaded to **[Codecov](https://about.codecov.io/)** (merge the repo in the Codecov app for PR comments and trends). For **private** repositories, add a **`CODECOV_TOKEN`** secret; public repos usually work without it.
 
 ## Endpoints
 
