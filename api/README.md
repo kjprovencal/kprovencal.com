@@ -21,7 +21,7 @@ Generate the hash:
 go run ./cmd/hashpassword 'your-password'
 ```
 
-Optional variables are documented inline in `env.example` (`LISTEN_ADDR`, `BADGER_PATH`, `CORS_ORIGIN`, `TURNSTILE_SECRET_KEY`, `APP_ENV`, `ADMIN_SESSION_HOURS`, `LOG_LEVEL`).
+Optional variables are documented inline in `env.example` (`LISTEN_ADDR`, `BADGER_PATH`, `CORS_ORIGIN`, `TURNSTILE_SECRET_KEY`, `TRUST_PROXY`, `APP_ENV`, `ADMIN_SESSION_HOURS`, `LOG_LEVEL`).
 
 ## Logging
 
@@ -53,6 +53,14 @@ Defaults: listen on **`:8080`**, data under **`./data/badger`** (created if miss
 ```bash
 go build -o personal-site-api .
 ```
+
+## Tests
+
+```bash
+go test ./...
+```
+
+Vitest (markdown pipeline and small unit tests) runs from the **repository root**: `npm test`.
 
 ## Endpoints
 

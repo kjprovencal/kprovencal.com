@@ -52,7 +52,8 @@ func decodeJSONBody(w http.ResponseWriter, r *http.Request, v any, plainErr bool
 	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
 	err := json.NewDecoder(r.Body).Decode(v)
 	if err != nil {
-		if errors.Is(err, http.ErrBodyTooLarge) {
+		// http.MaxBytesReader returns errors.New("http: request body too large") (no stable exported sentinel in all Go versions).
+		if err.Error() == "http: request body too large" {
 			if plainErr {
 				writePlainError(w, http.StatusRequestEntityTooLarge, "Request body too large.")
 			} else {

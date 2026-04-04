@@ -1,6 +1,10 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  test: {
+    environment: "node",
+    include: ["src/**/*.test.ts"],
+  },
   server: {
     port: 5173,
     // Dev only: forward /api and /admin to Go. Prod: set VITE_PUBLIC_API_URL on the static build.

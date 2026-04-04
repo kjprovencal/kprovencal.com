@@ -1,18 +1,10 @@
 import { marked } from "marked";
 import { initTheme } from "./theme";
-import { registerEmojiExtension } from "./marked-emoji";
-import { registerFormTokenExtension } from "./marked-form-tokens";
-import { registerTaggedTableExtension } from "./marked-tagged-table";
+import { configureMarked } from "./markdown-pipeline";
 import { mountWeddingRsvp, teardownWeddingRsvp } from "./mount-wedding-rsvp";
 import { mountAdmin } from "./mount-admin";
 
-marked.setOptions({
-  gfm: true,
-  breaks: false,
-});
-registerEmojiExtension();
-registerFormTokenExtension();
-registerTaggedTableExtension();
+configureMarked();
 
 const contentRoot = document.getElementById("content");
 const mainEl = document.getElementById("main");
