@@ -1,8 +1,10 @@
 import { publicApiUrl } from "./api-base";
+import { escapeAttr, escapeHtml } from "./html-escape";
 
 const TURNSTILE_SITE_KEY =
   import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() ?? "";
 
+/** Meal `label` strings must stay in sync with `allowedWeddingMealLabels` in `api/public.go`. */
 const MEAL_OPTIONS: { value: string; label: string; description: string }[] = [
   {
     value: "chicken-alfredo",
@@ -38,18 +40,6 @@ function mealSelectHtml(guestIndex: number): string {
       </select>
     </label>
   `;
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function escapeAttr(s: string): string {
-  return escapeHtml(s).replace(/'/g, "&#39;");
 }
 
 function loadTurnstileScript(): Promise<void> {

@@ -16,6 +16,10 @@ import (
 
 var slugRe = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
+var loginLimiter = newLoginAttemptLimiter()
+
+const maxAdminFormBodyBytes = 32 << 10 // 32 KiB for application/x-www-form-urlencoded
+
 func setAdminCORS(w http.ResponseWriter, corsAllow string) {
 	if corsAllow == "" {
 		return
@@ -71,6 +75,11 @@ func mountAdminRoutes(mux *http.ServeMux, db *badger.DB, sessionSecret []byte, p
 
 	mux.HandleFunc("POST /admin/login", func(w http.ResponseWriter, r *http.Request) {
 		setAdminCORS(w, corsAllow)
+		if !loginLimiter.allow(requestRemoteAddr(r)) {
+			writeTooManyLoginAttempts(w)
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, maxAdminFormBodyBytes)
 		if err := r.ParseForm(); err != nil {
 			slog.WarnContext(r.Context(), "admin login bad form", "err", err, "remote_addr", requestRemoteAddr(r))
 			writeJSON(w, http.StatusBadRequest, errResp{"invalid form"})
@@ -140,6 +149,7 @@ func mountAdminRoutes(mux *http.ServeMux, db *badger.DB, sessionSecret []byte, p
 	}))))
 
 	mux.Handle("POST /admin/events", withAdminCORS(corsAllow, requireAdmin(sessionSecret, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, maxAdminFormBodyBytes)
 		if err := r.ParseForm(); err != nil {
 			writeJSON(w, http.StatusBadRequest, errResp{"invalid form"})
 			return

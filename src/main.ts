@@ -17,53 +17,36 @@ registerTaggedTableExtension();
 const contentRoot = document.getElementById("content");
 const mainEl = document.getElementById("main");
 
-const loaders: Record<string, () => Promise<string>> = {
-  "/": () => import("../content/index.md?raw").then((m) => m.default),
-  "/wedding-rsvp": () =>
-    import("../content/wedding-rsvp.md?raw").then((m) => m.default),
-  "/admin": () => import("../content/admin.md?raw").then((m) => m.default),
-};
+/** Single source for path → markdown loader and document title. */
+const ROUTES = [
+  {
+    path: "/",
+    title: "Kyle Provencal's Personal Site",
+    load: () => import("../content/index.md?raw").then((m) => m.default),
+  },
+  {
+    path: "/wedding-rsvp",
+    title: "Wedding RSVP",
+    load: () => import("../content/wedding-rsvp.md?raw").then((m) => m.default),
+  },
+  {
+    path: "/admin",
+    title: "Admin — Submissions",
+    load: () => import("../content/admin.md?raw").then((m) => m.default),
+  },
+] as const;
 
-const titles: Record<string, string> = {
-  "/": "Kyle Provencal's Personal Site",
-  "/wedding-rsvp": "Wedding RSVP",
-  "/admin": "Admin — Submissions",
-};
+const loaders: Record<string, () => Promise<string>> = Object.fromEntries(
+  ROUTES.map((r) => [r.path, r.load])
+);
+const titles: Record<string, string> = Object.fromEntries(
+  ROUTES.map((r) => [r.path, r.title])
+);
 
 function normalizePathname(pathname: string): string {
   if (pathname === "" || pathname === "/") return "/";
   const trimmed = pathname.replace(/\/+$/, "") || "/";
   return trimmed;
-}
-
-function redirectIfLegacyHtml(): void {
-  const { pathname, href } = window.location;
-  const suffix = "wedding-rsvp.html";
-  if (pathname.endsWith(suffix)) {
-    const u = new URL(href);
-    u.pathname = "/wedding-rsvp";
-    u.hash = "";
-    history.replaceState(null, "", u.toString());
-    return;
-  }
-  if (pathname.endsWith("admin.html")) {
-    const u = new URL(href);
-    u.pathname = "/admin";
-    u.hash = "";
-    history.replaceState(null, "", u.toString());
-  }
-}
-
-/** Old bookmarks using `/#/path` → `/path` (History API). */
-function migrateHashRoute(): void {
-  const hash = window.location.hash;
-  if (!hash.startsWith("#/")) return;
-  const path = normalizePathname(hash.slice(1));
-  if (!(path in loaders)) return;
-  const u = new URL(window.location.href);
-  u.pathname = path;
-  u.hash = "";
-  history.replaceState(null, "", u.toString());
 }
 
 function getRoutePath(): string {
@@ -149,8 +132,6 @@ async function renderRoute(): Promise<void> {
   }
 }
 
-redirectIfLegacyHtml();
-migrateHashRoute();
 initTheme();
 
 void renderRoute();

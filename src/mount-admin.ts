@@ -1,4 +1,5 @@
 import { publicApiUrl } from "./api-base";
+import { escapeHtml } from "./html-escape";
 import {
   MD_TABLE_ATTR,
   MD_TABLE_CLASS,
@@ -50,14 +51,6 @@ function adminFetch(path: string, init?: RequestInit): Promise<Response> {
     ...init,
     credentials: "include",
   });
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 function formatWhen(iso: string): string {
@@ -471,6 +464,12 @@ export function mountAdmin(): () => void {
           if (signal.aborted) return;
 
           if (!res.ok) {
+            if (res.status === 429) {
+              loginError.textContent =
+                "Too many sign-in attempts. Please wait a minute and try again.";
+              loginError.hidden = false;
+              return;
+            }
             const data = (await res.json().catch(() => null)) as {
               error?: string;
             } | null;

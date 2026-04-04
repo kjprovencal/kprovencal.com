@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 )
@@ -23,6 +24,22 @@ func clientIP(r *http.Request) string {
 		return strings.TrimSpace(r.RemoteAddr)
 	}
 	return host
+}
+
+// trustProxy returns true when TRUST_PROXY is set (e.g. 1, true, yes).
+// Only then do we use X-Forwarded-For for Turnstile's remoteip (avoids client spoofing when not behind a trusted proxy).
+func trustProxy() bool {
+	v := strings.ToLower(strings.TrimSpace(os.Getenv("TRUST_PROXY")))
+	return v == "1" || v == "true" || v == "yes"
+}
+
+// turnstileClientIP is the IP sent to Cloudflare Turnstile siteverify.
+// Uses the direct TCP remote address unless TRUST_PROXY is set, then the first X-Forwarded-For hop.
+func turnstileClientIP(r *http.Request) string {
+	if trustProxy() {
+		return requestRemoteAddr(r)
+	}
+	return clientIP(r)
 }
 
 func verifyTurnstile(ctx context.Context, secret, token, remoteIP string) error {
