@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Kyle Provencal's Personal Site</title>
+    <script>
+      (function () {
+        var key = "personal-site-theme";
+        var pref = localStorage.getItem(key);
+        var dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var resolved =
+          pref === "light" ? "light" : pref === "dark" ? "dark" : dark ? "dark" : "light";
+        document.documentElement.dataset.theme = resolved;
+        document.documentElement.dataset.preference = pref || "system";
+      })();
+    </script>
+    <link rel="stylesheet" href="/src/styles/global.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="site-title" href="/">Kyle Provencal's Personal Site</a>
+      <nav class="site-nav site-nav--row" aria-label="Site and theme">
+        <a class="site-nav-link" href="/">Home</a>
+        <a class="site-nav-link" href="/admin">Admin</a>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Theme: Auto">
+          <span class="theme-toggle__icons" aria-hidden="true">
+            <svg
+              class="theme-toggle__icon theme-toggle__icon--system"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="20" height="14" x="2" y="3" rx="2" />
+              <path d="M8 21h8" />
+              <path d="M12 17v4" />
+            </svg>
+            <svg
+              class="theme-toggle__icon theme-toggle__icon--light"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2" />
+              <path d="M12 20v2" />
+              <path d="m4.93 4.93 1.41 1.41" />
+              <path d="m17.66 17.66 1.41 1.41" />
+              <path d="M2 12h2" />
+              <path d="M20 12h2" />
+              <path d="m6.34 17.66-1.41 1.41" />
+              <path d="m19.07 4.93-1.41 1.41" />
+            </svg>
+            <svg
+              class="theme-toggle__icon theme-toggle__icon--dark"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+            </svg>
+          </span>
+        </button>
+      </nav>
+    </header>
+    <main id="main" class="document">
+      <article class="prose markdown-body" id="content" aria-live="polite"></article>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
