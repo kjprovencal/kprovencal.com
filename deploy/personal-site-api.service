@@ -1,0 +1,22 @@
+[Unit]
+Description=Personal site API (Go + Badger)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Change User/Group to match ownership of DEPLOY_PATH and data directory.
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/kprovencal
+EnvironmentFile=-/etc/personal-site-api.env
+ExecStart=/var/www/kprovencal/personal-site-api
+Restart=on-failure
+RestartSec=5
+
+# Hardening (optional; relax if the binary needs more)
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

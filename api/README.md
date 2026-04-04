@@ -69,7 +69,13 @@ go tool cover -func=coverage.out
 
 Vitest runs from the **repository root**: `npm test`. HTML/LCOV coverage: `npm run test:coverage` (output in `coverage/`).
 
-**CI:** [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs the Go and frontend test suites with coverage on pushes to **`main`** / **`markdown`** and on pull requests. Reports are uploaded to **[Codecov](https://about.codecov.io/)** (merge the repo in the Codecov app for PR comments and trends). For **private** repositories, add a **`CODECOV_TOKEN`** secret; public repos usually work without it.
+**CI:** [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs the Go and frontend test suites with coverage on pushes to **`main`** and on pull requests. Reports are uploaded to **[Codecov](https://about.codecov.io/)** (merge the repo in the Codecov app for PR comments and trends). For **private** repositories, add a **`CODECOV_TOKEN`** secret; public repos usually work without it.
+
+## Deploy (single droplet)
+
+Server bootstrap (nginx, systemd, TLS, firewall) and paths: **`deploy/SETUP.txt`**. Templates: **`deploy/nginx-site.conf.example`**, **`deploy/personal-site-api.service`**.
+
+On **push to `main`**, after tests pass, the **`deploy`** job rsyncs **`dist/`** and the **`personal-site-api`** binary over SSH and runs **`systemctl restart personal-site-api`**. Set repository secrets **`SSH_HOST`**, **`SSH_USER`**, **`DEPLOY_PATH`** (absolute path, no trailing slash), and **`SSH_PRIVATE_KEY`**.
 
 ## Endpoints
 

@@ -1,0 +1,53 @@
+DigitalOcean droplet — one-time setup (run as root or sudo)
+================================================================
+
+1) Packages
+   apt update && apt install -y nginx ufw certbot python3-certbot-nginx
+
+2) Deploy directory (match GitHub secret DEPLOY_PATH, e.g. /var/www/kprovencal)
+   mkdir -p /var/www/kprovencal/dist
+   chown -R www-data:www-data /var/www/kprovencal
+
+3) API environment (secrets — never commit real values)
+   nano /etc/personal-site-api.env
+   Required at minimum:
+     SESSION_SECRET=<32+ random bytes>
+     ADMIN_PASSWORD_BCRYPT=<output of: go run ./cmd/hashpassword 'your-password'>
+   Recommended for production behind nginx + HTTPS:
+     LISTEN_ADDR=127.0.0.1:8080
+     APP_ENV=production
+     TRUST_PROXY=1
+     BADGER_PATH=/var/www/kprovencal/data/badger
+   Optional:
+     CORS_ORIGIN=https://your.domain.example   # only if HTML is served from another origin
+   For same-origin (nginx proxies /api and /admin API paths), you usually omit CORS_ORIGIN.
+
+4) systemd unit
+   cp deploy/personal-site-api.service /etc/systemd/system/personal-site-api.service
+   # Edit paths/User in the unit file if your DEPLOY_PATH or user differs.
+   systemctl daemon-reload
+   systemctl enable --now personal-site-api
+
+5) nginx
+   Copy deploy/nginx-site.conf.example, set server_name and paths, then:
+   nginx -t && systemctl reload nginx
+
+6) TLS (Let’s Encrypt)
+   certbot --nginx -d your.domain.example
+
+7) Firewall
+   ufw allow OpenSSH
+   ufw allow 'Nginx Full'
+   ufw enable
+
+8) SSH key for GitHub Actions (deploy user or root)
+   On the droplet: ssh-keygen -t ed25519 -C "github-deploy" -f /root/.ssh/github_deploy -N ""
+   Authorize for login: cat /root/.ssh/github_deploy.pub >> /root/.ssh/authorized_keys
+   Paste the *private* key into GitHub repo secret SSH_PRIVATE_KEY.
+   Secrets to set: SSH_HOST, SSH_USER, DEPLOY_PATH (e.g. /var/www/kprovencal), SSH_PRIVATE_KEY.
+
+9) ARM droplets
+   If the droplet is aarch64, change GOARCH in .github/workflows/ci.yml (api Build release binary) from amd64 to arm64.
+
+10) First deploy
+   Push to main after secrets are set; CI uploads dist + API binary and runs rsync + systemctl restart.

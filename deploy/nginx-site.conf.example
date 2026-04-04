@@ -1,0 +1,36 @@
+# Example for nginx on Ubuntu/Debian. Adjust server_name, TLS, and paths.
+# Install: sudo cp nginx-site.conf.example /etc/nginx/sites-available/your-site
+#          sudo ln -s /etc/nginx/sites-available/your-site /etc/nginx/sites-enabled/
+#          sudo nginx -t && sudo systemctl reload nginx
+#
+# Replace /var/www/kprovencal with your DEPLOY_PATH (same as GitHub secret).
+
+server {
+    listen 80;
+    server_name your.domain.example;
+    root /var/www/kprovencal/dist;
+    index index.html;
+
+    # Public JSON APIs
+    location /api {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Admin API only (not the SPA HTML route — see location / below)
+    location ~ ^/admin/(login|logout|session|contacts|rsvps|wedding-rsvps|events) {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # SPA (/, /admin, /wedding-rsvp, …)
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
