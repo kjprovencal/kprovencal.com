@@ -103,6 +103,7 @@ export function mountWeddingRsvp(): void {
         theme: "auto",
         callback: () => refreshSubmitEnabled(),
         "error-callback": () => {
+          console.warn("Turnstile: widget error");
           if (statusEl) {
             statusEl.textContent =
               "Security check failed to load. Please refresh the page.";
@@ -110,7 +111,8 @@ export function mountWeddingRsvp(): void {
         },
         "expired-callback": () => refreshSubmitEnabled(),
       });
-    } catch {
+    } catch (err) {
+      console.warn("Turnstile: failed to load or render", err);
       if (statusEl) {
         statusEl.textContent =
           "Could not load security check. Please refresh the page.";
@@ -216,8 +218,8 @@ export function mountWeddingRsvp(): void {
         if (turnstileWidgetId !== undefined && window.turnstile) {
           try {
             window.turnstile.remove(turnstileWidgetId);
-          } catch {
-            /* ignore */
+          } catch (err) {
+            console.warn("Turnstile: remove failed after successful RSVP", err);
           }
         }
         turnstileWidgetId = undefined;
@@ -248,8 +250,8 @@ export function teardownWeddingRsvp(): void {
   if (turnstileWidgetId !== undefined && window.turnstile) {
     try {
       window.turnstile.remove(turnstileWidgetId);
-    } catch {
-      /* ignore */
+    } catch (err) {
+      console.warn("Turnstile: remove failed during teardown", err);
     }
   }
   turnstileWidgetId = undefined;
