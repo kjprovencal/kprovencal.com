@@ -103,6 +103,7 @@ export function mountWeddingRsvp(): void {
         theme: "auto",
         callback: () => refreshSubmitEnabled(),
         "error-callback": () => {
+          console.warn("Turnstile: widget error");
           if (statusEl) {
             statusEl.textContent =
               "Security check failed to load. Please refresh the page.";
@@ -110,7 +111,8 @@ export function mountWeddingRsvp(): void {
         },
         "expired-callback": () => refreshSubmitEnabled(),
       });
-    } catch {
+    } catch (err) {
+      console.warn("Turnstile: failed to load or render", err);
       if (statusEl) {
         statusEl.textContent =
           "Could not load security check. Please refresh the page.";
@@ -212,8 +214,27 @@ export function mountWeddingRsvp(): void {
           refreshSubmitEnabled();
           return;
         }
-        statusEl.textContent =
+
+        if (turnstileWidgetId !== undefined && window.turnstile) {
+          try {
+            window.turnstile.remove(turnstileWidgetId);
+          } catch (err) {
+            console.warn("Turnstile: remove failed after successful RSVP", err);
+          }
+        }
+        turnstileWidgetId = undefined;
+
+        const confirmation = document.createElement("div");
+        confirmation.id = "rsvp-form-confirmation";
+        confirmation.className = "rsvp-form__confirmation";
+        confirmation.setAttribute("role", "status");
+        confirmation.setAttribute("aria-live", "polite");
+        confirmation.tabIndex = -1;
+        confirmation.textContent =
           "Thanks — your RSVP has been submitted. We'll send you a confirmation email shortly.";
+        form.insertAdjacentElement("afterend", confirmation);
+        form.hidden = true;
+        confirmation.focus();
       } catch {
         statusEl.textContent = "Network error. Please try again.";
         if (turnstileWidgetId && window.turnstile) {
@@ -229,8 +250,8 @@ export function teardownWeddingRsvp(): void {
   if (turnstileWidgetId !== undefined && window.turnstile) {
     try {
       window.turnstile.remove(turnstileWidgetId);
-    } catch {
-      /* ignore */
+    } catch (err) {
+      console.warn("Turnstile: remove failed during teardown", err);
     }
   }
   turnstileWidgetId = undefined;
