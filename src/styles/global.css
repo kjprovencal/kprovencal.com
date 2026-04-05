@@ -450,6 +450,26 @@ label:has(+ input:required):after {
   margin: 0 0 0.75rem;
 }
 
+.rsvp-form__confirmation {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--heading);
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--sol-green);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  margin: 0 0 1rem;
+  outline: none;
+}
+
+.rsvp-form__confirmation:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
 .rsvp-form__submit {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
     "Helvetica Neue", sans-serif;

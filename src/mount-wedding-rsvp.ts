@@ -212,8 +212,27 @@ export function mountWeddingRsvp(): void {
           refreshSubmitEnabled();
           return;
         }
-        statusEl.textContent =
+
+        if (turnstileWidgetId !== undefined && window.turnstile) {
+          try {
+            window.turnstile.remove(turnstileWidgetId);
+          } catch {
+            /* ignore */
+          }
+        }
+        turnstileWidgetId = undefined;
+
+        const confirmation = document.createElement("div");
+        confirmation.id = "rsvp-form-confirmation";
+        confirmation.className = "rsvp-form__confirmation";
+        confirmation.setAttribute("role", "status");
+        confirmation.setAttribute("aria-live", "polite");
+        confirmation.tabIndex = -1;
+        confirmation.textContent =
           "Thanks — your RSVP has been submitted. We'll send you a confirmation email shortly.";
+        form.insertAdjacentElement("afterend", confirmation);
+        form.hidden = true;
+        confirmation.focus();
       } catch {
         statusEl.textContent = "Network error. Please try again.";
         if (turnstileWidgetId && window.turnstile) {
