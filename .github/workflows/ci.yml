@@ -132,6 +132,7 @@ jobs:
         run: |
           set -euxo pipefail
           TARGET="${SSH_USER}@${SSH_HOST}"
+          # dist/ owned by SSH_USER; chgrp to www-data so nginx can read via group (see deploy/SETUP.txt).
           rsync -avz --delete dist/ "${TARGET}:${DEPLOY_PATH}/dist/"
-          scp api-bin/personal-site-api "${TARGET}:${DEPLOY_PATH}/personal-site-api.new"
-          ssh "$TARGET" "mv ${DEPLOY_PATH}/personal-site-api.new ${DEPLOY_PATH}/personal-site-api && chmod +x ${DEPLOY_PATH}/personal-site-api && chown www-data:www-data ${DEPLOY_PATH}/personal-site-api && chown -R www-data:www-data ${DEPLOY_PATH}/dist && systemctl restart personal-site-api"
+          scp api-bin/personal-site-api "${TARGET}:/tmp/personal-site-api.new"
+          ssh "$TARGET" "sudo install -m 755 -o www-data -g www-data /tmp/personal-site-api.new '${DEPLOY_PATH}/personal-site-api' && sudo rm -f /tmp/personal-site-api.new && sudo chgrp -R www-data '${DEPLOY_PATH}/dist' && sudo systemctl restart personal-site-api"

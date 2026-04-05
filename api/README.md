@@ -75,7 +75,7 @@ Vitest runs from the **repository root**: `npm test`. HTML/LCOV coverage: `npm r
 
 Server bootstrap (nginx, systemd, TLS, firewall) and paths: **`deploy/SETUP.txt`**. Templates: **`deploy/nginx-site.conf.example`**, **`deploy/personal-site-api.service`**.
 
-On **push to `main`**, after tests pass, the **`deploy`** job rsyncs **`dist/`** and the **`personal-site-api`** binary over SSH and runs **`systemctl restart personal-site-api`**. Set repository secrets **`SSH_HOST`**, **`SSH_USER`**, **`DEPLOY_PATH`** (absolute path, no trailing slash), and **`SSH_PRIVATE_KEY`**.
+On **push to `main`**, after tests pass, the **`deploy`** job rsyncs **`dist/`**, runs **`chgrp -R www-data dist/`** (so nginx can read static files), installs the API binary with **`install(1)`** as **`www-data:www-data`**, and restarts **`personal-site-api`**. See **`deploy/SETUP.txt`** (add **`github-deploy`** to group **`www-data`**). Set repository secrets **`SSH_HOST`**, **`SSH_USER`**, **`DEPLOY_PATH`** (absolute path, no trailing slash), and **`SSH_PRIVATE_KEY`**.
 
 ## Endpoints
 

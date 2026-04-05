@@ -6,7 +6,20 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
 
 2) Deploy directory (match GitHub secret DEPLOY_PATH, e.g. /var/www/kprovencal)
    mkdir -p /var/www/kprovencal/dist
-   chown -R www-data:www-data /var/www/kprovencal
+   # Put the GitHub SSH user in the www-data group so it can share dist/ with nginx without world-readable files:
+   #   usermod -aG www-data github-deploy
+   # (log out/in or `newgrp www-data` so the extra group applies to SSH sessions.)
+   # Own the tree by that user; use group www-data on dist/ so nginx can read via group permission:
+   #   chown -R github-deploy:www-data /var/www/kprovencal
+   # Optional setgid on dist (once): chmod g+s /var/www/kprovencal/dist — new subdirs may inherit group www-data.
+   #
+   # CI installs the API binary with `install -m 755 -o www-data -g www-data`, then `chgrp -R www-data dist/`
+   # each deploy so nginx can read via the group bit (Vite output is usually 644/755 already).
+   # Optional once on the server — setgid on dist so new subdirs inherit group www-data:
+   #   sudo find /var/www/kprovencal/dist -type d -exec chmod g+s {} +
+   #
+   # Passwordless sudo for the deploy user (paths may vary): install, chgrp, rm, systemctl.
+   # Easiest alternative: SSH_USER=root with the key in root’s authorized_keys.
 
 3) API environment (secrets — never commit real values)
    nano /etc/personal-site-api.env
@@ -45,6 +58,9 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
    Authorize for login: cat /root/.ssh/github_deploy.pub >> /root/.ssh/authorized_keys
    Paste the *private* key into GitHub repo secret SSH_PRIVATE_KEY.
    Secrets to set: SSH_HOST, SSH_USER, DEPLOY_PATH (e.g. /var/www/kprovencal), SSH_PRIVATE_KEY.
+
+   If rsync fails with "Permission denied" on dist/: ensure DEPLOY_PATH (and dist/) is owned by
+   the GitHub SSH user, not www-data.
 
 9) ARM droplets
    If the droplet is aarch64, change GOARCH in .github/workflows/ci.yml (api Build release binary) from amd64 to arm64.
