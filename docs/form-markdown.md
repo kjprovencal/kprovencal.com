@@ -4,6 +4,8 @@ This project includes a `marked` extension that turns specific markdown links in
 
 The extension lives in `src/marked-form-tokens.ts` and is registered once in `src/main.ts` before rendering markdown. The wedding RSVP form is wired in `src/mount-wedding-rsvp.ts`; the admin dashboard mounts into a `?slot?` from `content/admin.md` via `src/mount-admin.ts`, which **detaches** tagged tables (see below) and injects API rows into each `<tbody>`.
 
+**Static assets (images, PDFs):** Put files in the repo **`public/`** directory (project root). Vite copies them to the build output root, so link as `/wedding-invitation.png`, not `/content/...`. The **`content/`** tree is markdown source only and is **not** deployed as static URLs.
+
 ## Tagged tables (`@table`)
 
 `src/marked-tagged-table.ts` registers a **block** extension so you can label any GFM pipe table for stable DOM queries after `marked.parse`.

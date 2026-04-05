@@ -8,9 +8,9 @@ We’re looking forward to seeing you at our wedding! Please use the form below 
 - Time: 2:00 PM
 - Location: [Bailey Island Library Hall, Bailey Island, ME](https://maps.apple/p/SiEuUtJj234X.b)
 
-:letter: [View invitation](/content/wedding-invitation.png "Wedding invitation")
+:letter: [View invitation](/wedding-invitation.png "Wedding invitation")
 
-:menu: [View menu](/content/wedding-menu.png "Wedding menu")
+:menu: [View menu](/wedding-menu.png "Wedding menu")
 
 ## Your Response
 
