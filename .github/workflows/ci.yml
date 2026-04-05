@@ -25,7 +25,10 @@ jobs:
       - name: Install
         run: npm ci
 
+      # Public Turnstile site key — set repo secret VITE_TURNSTILE_SITE_KEY (optional; omit for builds without widget).
       - name: Build
+        env:
+          VITE_TURNSTILE_SITE_KEY: ${{ secrets.VITE_TURNSTILE_SITE_KEY }}
         run: npm run build
 
       - name: Test with coverage
