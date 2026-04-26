@@ -84,22 +84,20 @@ On **push to `main`**, after tests pass, the **`deploy`** job rsyncs **`dist/`**
 | `GET`  | `/healthz`             | Liveness; plain `ok`                                                   |
 | `GET`  | `/api/events`          | Published events (slug + title)                                        |
 | `POST` | `/api/contact`         | JSON contact form                                                      |
-| `POST` | `/api/rsvp`            | JSON event RSVP (`event_slug`, …)                                      |
-| `POST` | `/api/wedding-rsvp`    | JSON wedding RSVP; optional Turnstile if `TURNSTILE_SECRET_KEY` is set |
+| `POST` | `/api/rsvp`            | JSON RSVP (guests, meals, notes); optional Turnstile if `TURNSTILE_SECRET_KEY` is set |
 | `POST` | `/admin/login`         | Form: `password` → sets session cookie                                 |
 | `POST` | `/admin/logout`        | Clears session (authenticated)                                         |
 | `GET`  | `/admin/session`       | `{ "authenticated": true }` if cookie valid                            |
 | `GET`  | `/admin/contacts`      | JSON list (authenticated)                                              |
-| `GET`  | `/admin/rsvps`         | JSON list (authenticated)                                              |
-| `GET`  | `/admin/wedding-rsvps` | JSON list (authenticated)                                              |
+| `GET`  | `/admin/rsvps`         | JSON list of RSVPs (authenticated)                                    |
 | `GET`  | `/admin/events`        | JSON list (authenticated)                                              |
 | `POST` | `/admin/events`        | Create event (form body; authenticated)                                |
 
-`OPTIONS` on `/api/contact`, `/api/rsvp`, and `/api/wedding-rsvp` returns CORS preflight headers when `CORS_ORIGIN` is set. The same applies to **`/admin/*`** routes when the admin UI is loaded from another origin (credentialed `fetch`).
+`OPTIONS` on `/api/contact` and `/api/rsvp` returns CORS preflight headers when `CORS_ORIGIN` is set. The same applies to **`/admin/*`** routes when the admin UI is loaded from another origin (credentialed `fetch`).
 
 ## Admin UI (static site)
 
-The site is a single **`index.html`** SPA using **path-based** client routing (`/`, `/wedding-rsvp`, `/admin`). Open **`/admin`** (e.g. `http://127.0.0.1:5173/admin` with Vite). The admin view is markdown in `content/admin.md`: **`@table slug [label]`** blocks (see `src/marked-tagged-table.ts`) produce GFM **tables**; **`mount-admin.ts`** collects those tables in **document order**, builds **tabs** from them, and fills each **`<tbody>`** from **`GET /admin/{slug}`** (with tailored row renderers for `wedding-rsvps`, `rsvps`, and `contacts`, and a generic renderer for other list endpoints). A **`?slot?`** provides the login/dashboard shell. **Vite** proxies **`/admin/*`** API traffic to this server in dev, while **`GET /admin`** as an HTML document still loads the SPA (see `vite.config.ts` `proxy.bypass`). Legacy **`/admin.html`** URLs are rewritten to **`/admin`**. Deploy the static build behind a host that **falls back to `index.html`** for unknown paths (same as any History-API SPA). Old **`/#/…`** links are upgraded once to **`/…`** on load.
+The site is a single **`index.html`** SPA using **path-based** client routing (`/`, `/rsvp` and `/wedding-rsvp` share the same RSVP page, `/admin`). Open **`/admin`** (e.g. `http://127.0.0.1:5173/admin` with Vite). The admin view is markdown in `content/admin.md`: **`@table slug [label]`** blocks (see `src/marked-tagged-table.ts`) produce GFM **tables**; **`mount-admin.ts`** collects those tables in **document order**, builds **tabs** from them, and fills each **`<tbody>`** from **`GET /admin/{slug}`** (with tailored row renderers for `rsvps` and `contacts`, and a generic renderer for other list endpoints). A **`?slot?`** provides the login/dashboard shell. **Vite** proxies **`/admin/*`** API traffic to this server in dev, while **`GET /admin`** as an HTML document still loads the SPA (see `vite.config.ts` `proxy.bypass`). Legacy **`/admin.html`** URLs are rewritten to **`/admin`**. Deploy the static build behind a host that **falls back to `index.html`** for unknown paths (same as any History-API SPA). Old **`/#/…`** links are upgraded once to **`/…`** on load.
 
 When the HTML is served from a **different origin** than the API, set **`CORS_ORIGIN`** to that HTML origin and **`VITE_PUBLIC_API_URL`** on the static build to your API URL. With **`APP_ENV=production`**, session cookies use **`SameSite=None`** and **`Secure`** so the browser can send them on cross-site requests to the API host.
 

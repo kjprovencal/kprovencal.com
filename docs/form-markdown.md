@@ -2,7 +2,7 @@
 
 This project includes a `marked` extension that turns specific markdown links into form controls.
 
-The extension lives in `src/marked-form-tokens.ts` and is registered once in `src/main.ts` before rendering markdown. The wedding RSVP form is wired in `src/mount-wedding-rsvp.ts`; the admin dashboard mounts into a `?slot?` from `content/admin.md` via `src/mount-admin.ts`, which **detaches** tagged tables (see below) and injects API rows into each `<tbody>`.
+The extension lives in `src/marked-form-tokens.ts` and is registered once in `src/main.ts` before rendering markdown. The wedding RSVP form is wired in `src/mount-rsvp.ts`; the admin dashboard mounts into a `?slot?` from `content/admin.md` via `src/mount-admin.ts`, which **detaches** tagged tables (see below) and injects API rows into each `<tbody>`.
 
 **Static assets (images, PDFs):** Put files in the repo **`public/`** directory (project root). Vite copies them to the build output root, so link as `/wedding-invitation.png`, not `/content/...`. The **`content/`** tree is markdown source only and is **not** deployed as static URLs.
 
@@ -30,7 +30,7 @@ The extension lives in `src/marked-form-tokens.ts` and is registered once in `sr
 
 Slugs must match `^[a-z][a-z0-9_-]*$` (case-insensitive on the `@table` line).
 
-**Admin dashboard:** `src/mount-admin.ts` collects **every** `md-tagged-table` under `#content` in **document order**, builds one tab per table, and loads `GET /admin/{slug}` (after a small alias map, e.g. `wedding-rsvp` → `wedding-rsvps`). Built-in formatters exist for `wedding-rsvps`, `rsvps`, and `contacts`; any other slug still calls the same URL shape and renders a **generic** JSON array table (handy for new list endpoints). Match your header columns to the API fields you care about, or rely on the generic columns derived from the first row’s keys.
+**Admin dashboard:** `src/mount-admin.ts` collects **every** `md-tagged-table` under `#content` in **document order**, builds one tab per table, and loads `GET /admin/{slug}` (after a small alias map, e.g. `rsvp` or `wedding-rsvp` → `rsvps`). Built-in formatters exist for `rsvps` and `contacts`; any other slug still calls the same URL shape and renders a **generic** JSON array table (handy for new list endpoints). Match your header columns to the API fields you care about, or rely on the generic columns derived from the first row’s keys.
 
 ## Core Pattern
 
@@ -121,12 +121,12 @@ This renders:
 
 ## Turnstile host
 
-Use `turnstile` for a labeled container your script renders into with explicit Turnstile `render()` (see `src/mount-wedding-rsvp.ts`). Default classes include `rsvp-form__turnstile-host`; set `id` if you need a fixed selector (e.g. `id=cf-turnstile`).
+Use `turnstile` for a labeled container your script renders into with explicit Turnstile `render()` (see `src/mount-rsvp.ts`). Default classes include `rsvp-form__turnstile-host`; set `id` if you need a fixed selector (e.g. `id=cf-turnstile`).
 
 ## RSVP Example Snippet
 
 ```md
-[RSVP form ?form?](wedding-rsvp-form "class=rsvp-form novalidate")
+[RSVP form ?form?](rsvp-form "class=rsvp-form novalidate")
 [Full name ?text?*](name "id=rsvp-name class=rsvp-form__input labelClass=rsvp-form__label")
 [Email ?email?*](email "id=rsvp-email class=rsvp-form__input labelClass=rsvp-form__label")
 [Number of attendees in your party ?select?*](guest_count "id=rsvp-guest-count class=rsvp-form__select labelClass=rsvp-form__label options=\":Choose...|0:0 (not attending)|1:1|2:2\"")

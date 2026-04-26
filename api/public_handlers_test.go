@@ -65,7 +65,7 @@ func TestWeddingRSVPPOST_GuestCountZero(t *testing.T) {
 	mountPublicAPI(mux, db, "")
 
 	body := `{"name":"a","email":"a@b.co","guest_count":0,"meals":[],"notes":""}`
-	req := httptest.NewRequest(http.MethodPost, "/api/wedding-rsvp", strings.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/api/rsvp", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
@@ -82,7 +82,7 @@ func TestWeddingRSVPPOST_Success(t *testing.T) {
 	mountPublicAPI(mux, db, "")
 
 	body := `{"name":"Ada","email":"ada@example.com","guest_count":1,"meals":["Guest 1: Chicken Alfredo"],"notes":""}`
-	req := httptest.NewRequest(http.MethodPost, "/api/wedding-rsvp", strings.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/api/rsvp", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
@@ -92,19 +92,3 @@ func TestWeddingRSVPPOST_Success(t *testing.T) {
 	}
 }
 
-func TestRSVPPOST_UnknownEvent(t *testing.T) {
-	t.Parallel()
-	db := newTestDB(t)
-	mux := http.NewServeMux()
-	mountPublicAPI(mux, db, "")
-
-	body := `{"event_slug":"nope","name":"a","email":"a@b.co","guest_count":1,"notes":""}`
-	req := httptest.NewRequest(http.MethodPost, "/api/rsvp", strings.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusNotFound {
-		t.Fatalf("status %d", rec.Code)
-	}
-}

@@ -18,13 +18,12 @@ const (
 	maxEmailLen           = 254
 	maxMessageLen         = 8000
 	maxNotesLen           = 2000
-	maxSlugLen            = 64
 	maxWeddingMealLines   = 8
 	maxWeddingMealLineLen = 500
 	maxJSONBodyBytes      = 64 << 10 // 64 KiB for POST JSON bodies
 )
 
-// allowedWeddingMealLabels must match `label` in src/mount-wedding-rsvp.ts (MEAL_OPTIONS).
+// allowedWeddingMealLabels must match `label` in src/mount-rsvp.ts (MEAL_OPTIONS).
 var allowedWeddingMealLabels = map[string]struct{}{
 	"Chicken Alfredo":     {},
 	"Scampi":              {},
@@ -146,14 +145,6 @@ func mountPublicAPI(mux *http.ServeMux, db *badger.DB, corsAllow string) {
 		corsHeaders(w, corsAllow, []string{"POST", "OPTIONS"})
 		w.WriteHeader(http.StatusNoContent)
 	})
-	mux.HandleFunc("POST /api/wedding-rsvp", func(w http.ResponseWriter, r *http.Request) {
-		corsHeaders(w, corsAllow, []string{"POST", "OPTIONS"})
-		handleWeddingRSVP(w, r, db)
-	})
-	mux.HandleFunc("OPTIONS /api/wedding-rsvp", func(w http.ResponseWriter, r *http.Request) {
-		corsHeaders(w, corsAllow, []string{"POST", "OPTIONS"})
-		w.WriteHeader(http.StatusNoContent)
-	})
 }
 
 type contactIn struct {
@@ -191,61 +182,6 @@ func handleContact(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 }
 
 type rsvpIn struct {
-	EventSlug  string `json:"event_slug"`
-	Name       string `json:"name"`
-	Email      string `json:"email"`
-	GuestCount int    `json:"guest_count"`
-	Notes      string `json:"notes"`
-}
-
-func handleRSVP(w http.ResponseWriter, r *http.Request, db *badger.DB) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	var in rsvpIn
-	if !decodeJSONBody(w, r, &in, false) {
-		return
-	}
-	slug := strings.TrimSpace(in.EventSlug)
-	name := strings.TrimSpace(in.Name)
-	email := strings.TrimSpace(in.Email)
-	notes := strings.TrimSpace(in.Notes)
-	guests := in.GuestCount
-	if guests < 1 {
-		guests = 1
-	}
-	if guests > 50 {
-		writeJSON(w, http.StatusBadRequest, errResp{"guest_count out of range"})
-		return
-	}
-	if slug == "" || name == "" || email == "" {
-		writeJSON(w, http.StatusBadRequest, errResp{"event_slug, name, and email are required"})
-		return
-	}
-	if utf8.RuneCountInString(slug) > maxSlugLen || utf8.RuneCountInString(name) > maxNameLen || utf8.RuneCountInString(email) > maxEmailLen || utf8.RuneCountInString(notes) > maxNotesLen {
-		writeJSON(w, http.StatusBadRequest, errResp{"field too long"})
-		return
-	}
-	ev, err := getPublishedEventBySlug(db, slug)
-	if err != nil {
-		if errors.Is(err, ErrEventNotFound) {
-			writeJSON(w, http.StatusNotFound, errResp{"unknown or unpublished event"})
-			return
-		}
-		slog.ErrorContext(r.Context(), "get event by slug", "err", err, "slug", slug)
-		writeJSON(w, http.StatusInternalServerError, errResp{"could not look up event"})
-		return
-	}
-	if err := insertRSVP(db, ev, name, email, guests, notes); err != nil {
-		slog.ErrorContext(r.Context(), "insert rsvp", "err", err, "event_slug", slug)
-		writeJSON(w, http.StatusInternalServerError, errResp{"could not save"})
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
-}
-
-type weddingRsvpIn struct {
 	Name           string   `json:"name"`
 	Email          string   `json:"email"`
 	GuestCount     int      `json:"guest_count"`
@@ -254,7 +190,7 @@ type weddingRsvpIn struct {
 	TurnstileToken string   `json:"turnstile_token"`
 }
 
-func handleWeddingRSVP(w http.ResponseWriter, r *http.Request, db *badger.DB) {
+func handleRSVP(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -262,7 +198,7 @@ func handleWeddingRSVP(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 
 	turnstileSecret := strings.TrimSpace(os.Getenv("TURNSTILE_SECRET_KEY"))
 
-	var in weddingRsvpIn
+	var in rsvpIn
 	if !decodeJSONBody(w, r, &in, true) {
 		return
 	}

@@ -69,7 +69,7 @@ function renderMealRows(count: number, container: HTMLElement): void {
 
 export function mountWeddingRsvp(): void {
   const form = document.getElementById(
-    "wedding-rsvp-form"
+    "rsvp-form"
   ) as HTMLFormElement | null;
   const guestSelect = document.getElementById(
     "rsvp-guest-count"
@@ -199,7 +199,7 @@ export function mountWeddingRsvp(): void {
       if (turnstileToken) payload.turnstile_token = turnstileToken;
 
       try {
-        const res = await fetch(publicApiUrl("/api/wedding-rsvp"), {
+        const res = await fetch(publicApiUrl("/api/rsvp"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

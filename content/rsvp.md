@@ -14,7 +14,7 @@ We’re looking forward to seeing you at our wedding! Please use the form below 
 
 ## Your Response
 
-[RSVP form ?form?](wedding-rsvp-form "class=rsvp-form novalidate")
+[RSVP form ?form?](rsvp-form "class=rsvp-form novalidate")
 
 [Full name ?text?*](name "id=rsvp-name class=rsvp-form__input labelClass=rsvp-form__label autocomplete=name")
 

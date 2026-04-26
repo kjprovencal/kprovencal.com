@@ -4,17 +4,12 @@ Use the password configured for this site’s API to sign in. You can review use
 
 [← Back to home](/)
 
-<!-- `@table slug [tab label]` — slug should match `GET /admin/{slug}` (e.g. `wedding-rsvps`, `rsvps`, `contacts`). Optional label sets the tab title. -->
+<!-- `@table slug [tab label]` — slug should match `GET /admin/{slug}` (e.g. `rsvps`, `contacts`). Optional label sets the tab title. -->
 
-@table wedding-rsvps Wedding RSVPs
+@table rsvps RSVPs
 
 | When | Name | Email | Guests | Meals | Notes |
 | ---- | ---- | ----- | ------ | ----- | ----- |
-
-@table rsvps Event RSVPs
-
-| When | Event | Name | Email | Guests | Notes |
-| ---- | ----- | ---- | ----- | ------ | ----- |
 
 @table contacts Contacts
 

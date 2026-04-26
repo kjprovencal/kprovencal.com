@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestListWeddingRSVPsAfterInsert(t *testing.T) {
+func TestListRSVPsAfterInsert(t *testing.T) {
 	dir := t.TempDir()
 	dbPath := filepath.Join(dir, "badger")
 	db, err := openDB(dbPath)
@@ -17,7 +17,7 @@ func TestListWeddingRSVPsAfterInsert(t *testing.T) {
 	if err := insertWeddingRSVP(db, "A", "a@b.co", 1, []string{"Guest 1: X"}, ""); err != nil {
 		t.Fatal(err)
 	}
-	rows, err := listWeddingRSVPs(db, 50)
+	rows, err := listRSVPs(db, 50)
 	if err != nil {
 		t.Fatal(err)
 	}
