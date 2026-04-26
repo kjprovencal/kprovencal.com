@@ -16,17 +16,6 @@ type WeddingRSVP = {
   notes: string;
 };
 
-type EventRSVP = {
-  id: string;
-  created_at: string;
-  event_slug: string;
-  event_title: string;
-  name: string;
-  email: string;
-  guest_count: number;
-  notes: string;
-};
-
 type ContactRow = {
   id: string;
   created_at: string;
@@ -79,7 +68,7 @@ function mealListHtml(meals: string[]): string {
 
 function weddingRowsHtml(rows: WeddingRSVP[], colspan: number): string {
   if (rows.length === 0) {
-    return `<tr><td colspan="${colspan}" class="admin-empty">No wedding RSVPs yet.</td></tr>`;
+    return `<tr><td colspan="${colspan}" class="admin-empty">No RSVPs yet.</td></tr>`;
   }
   return rows
     .map(
@@ -91,28 +80,6 @@ function weddingRowsHtml(rows: WeddingRSVP[], colspan: number): string {
         }</td><td>${mealListHtml(
           r.meals ?? []
         )}</td><td class="admin-cell-notes">${escapeHtml(
-          r.notes || "—"
-        )}</td></tr>`
-    )
-    .join("");
-}
-
-function eventRsvpRowsHtml(rows: EventRSVP[], colspan: number): string {
-  if (rows.length === 0) {
-    return `<tr><td colspan="${colspan}" class="admin-empty">No event RSVPs yet.</td></tr>`;
-  }
-  return rows
-    .map(
-      (r) =>
-        `<tr><td>${escapeHtml(formatWhen(r.created_at))}</td><td>${escapeHtml(
-          r.event_title || r.event_slug
-        )}<br /><span class="admin-muted">${escapeHtml(
-          r.event_slug
-        )}</span></td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(
-          r.email
-        )}</td><td>${
-          r.guest_count
-        }</td><td class="admin-cell-notes">${escapeHtml(
           r.notes || "—"
         )}</td></tr>`
     )
@@ -178,14 +145,10 @@ function genericArrayRowsHtml(data: unknown, colspan: number): string {
 }
 
 const LIST_REGISTRY: Record<string, ListHandler> = {
-  "wedding-rsvps": {
-    path: "/admin/wedding-rsvps",
-    render: (data, colspan) =>
-      weddingRowsHtml(data as WeddingRSVP[], colspan),
-  },
   rsvps: {
     path: "/admin/rsvps",
-    render: (data, colspan) => eventRsvpRowsHtml(data as EventRSVP[], colspan),
+    render: (data, colspan) =>
+      weddingRowsHtml(data as WeddingRSVP[], colspan),
   },
   contacts: {
     path: "/admin/contacts",
@@ -197,7 +160,8 @@ const LIST_REGISTRY: Record<string, ListHandler> = {
 /** Slug on `@table` line → registry key (API path segment after `/admin/`). */
 const SLUG_ALIASES: Record<string, string> = {
   rsvp: "rsvps",
-  "wedding-rsvp": "wedding-rsvps",
+  "wedding-rsvp": "rsvps",
+  "wedding-rsvps": "rsvps",
 };
 
 function resolveListHandler(slug: string): ListHandler {

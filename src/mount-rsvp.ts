@@ -199,7 +199,7 @@ export function mountWeddingRsvp(): void {
       if (turnstileToken) payload.turnstile_token = turnstileToken;
 
       try {
-        const res = await fetch(publicApiUrl("/api/wedding-rsvp"), {
+        const res = await fetch(publicApiUrl("/api/rsvp"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

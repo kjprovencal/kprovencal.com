@@ -30,7 +30,7 @@ The extension lives in `src/marked-form-tokens.ts` and is registered once in `sr
 
 Slugs must match `^[a-z][a-z0-9_-]*$` (case-insensitive on the `@table` line).
 
-**Admin dashboard:** `src/mount-admin.ts` collects **every** `md-tagged-table` under `#content` in **document order**, builds one tab per table, and loads `GET /admin/{slug}` (after a small alias map, e.g. `rsvp` → `rsvps`, `wedding-rsvp` → `wedding-rsvps`). Built-in formatters exist for `wedding-rsvps`, `rsvps`, and `contacts`; any other slug still calls the same URL shape and renders a **generic** JSON array table (handy for new list endpoints). Match your header columns to the API fields you care about, or rely on the generic columns derived from the first row’s keys.
+**Admin dashboard:** `src/mount-admin.ts` collects **every** `md-tagged-table` under `#content` in **document order**, builds one tab per table, and loads `GET /admin/{slug}` (after a small alias map, e.g. `rsvp` or `wedding-rsvp` → `rsvps`). Built-in formatters exist for `rsvps` and `contacts`; any other slug still calls the same URL shape and renders a **generic** JSON array table (handy for new list endpoints). Match your header columns to the API fields you care about, or rely on the generic columns derived from the first row’s keys.
 
 ## Core Pattern
 

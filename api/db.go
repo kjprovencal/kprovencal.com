@@ -14,8 +14,7 @@ import (
 )
 
 var (
-	ErrEventNotFound = errors.New("event not found")
-	ErrEventExists   = errors.New("event already exists")
+	ErrEventExists = errors.New("event already exists")
 )
 
 func openDB(path string) (*badger.DB, error) {
@@ -45,17 +44,6 @@ type ContactRow struct {
 }
 
 type RSVPRow struct {
-	ID         string    `json:"id"`
-	CreatedAt  time.Time `json:"created_at"`
-	EventSlug  string    `json:"event_slug"`
-	EventTitle string    `json:"event_title"`
-	Name       string    `json:"name"`
-	Email      string    `json:"email"`
-	GuestCount int       `json:"guest_count"`
-	Notes      string    `json:"notes"`
-}
-
-type WeddingRSVPRow struct {
 	ID         string    `json:"id"`
 	CreatedAt  time.Time `json:"created_at"`
 	Name       string    `json:"name"`
@@ -90,10 +78,6 @@ func rsvpKey(t time.Time, id string) string {
 	return tsKeyPrefix("rsvp", t) + id
 }
 
-func weddingRsvpKey(t time.Time, id string) string {
-	return tsKeyPrefix("rsvp", t) + id
-}
-
 type eventStored struct {
 	Slug      string    `json:"slug"`
 	Title     string    `json:"title"`
@@ -112,47 +96,11 @@ type contactStored struct {
 type rsvpStored struct {
 	ID         string    `json:"id"`
 	CreatedAt  time.Time `json:"created_at"`
-	EventSlug  string    `json:"event_slug"`
-	EventTitle string    `json:"event_title"`
-	Name       string    `json:"name"`
-	Email      string    `json:"email"`
-	GuestCount int       `json:"guest_count"`
-	Notes      string    `json:"notes"`
-}
-
-type weddingRsvpStored struct {
-	ID         string    `json:"id"`
-	CreatedAt  time.Time `json:"created_at"`
 	Name       string    `json:"name"`
 	Email      string    `json:"email"`
 	GuestCount int       `json:"guest_count"`
 	Meals      []string  `json:"meals"`
 	Notes      string    `json:"notes"`
-}
-
-func getPublishedEventBySlug(db *badger.DB, slug string) (Event, error) {
-	key := eventKey(slug)
-
-	var ev eventStored
-	err := db.View(func(tx *badger.Txn) error {
-		item, err := tx.Get(key)
-		if err != nil {
-			return err
-		}
-		return item.Value(func(val []byte) error {
-			return json.Unmarshal(val, &ev)
-		})
-	})
-	if err != nil {
-		if errors.Is(err, badger.ErrKeyNotFound) {
-			return Event{}, ErrEventNotFound
-		}
-		return Event{}, err
-	}
-	if !ev.Published {
-		return Event{}, ErrEventNotFound
-	}
-	return Event{Slug: ev.Slug, Title: ev.Title, CreatedAt: ev.CreatedAt, Published: ev.Published}, nil
 }
 
 func insertEvent(db *badger.DB, slug, title string, published bool) error {
@@ -205,33 +153,6 @@ func insertContact(db *badger.DB, name, email, message string) error {
 	})
 }
 
-func insertRSVP(db *badger.DB, ev Event, name, email string, guests int, notes string) error {
-	now := time.Now().UTC()
-	suffix, err := randomID(8)
-	if err != nil {
-		suffix = fmt.Sprintf("%d", now.UnixNano())
-	}
-	key := []byte(rsvpKey(now, suffix))
-
-	st := rsvpStored{
-		ID:         suffix,
-		CreatedAt:  now,
-		EventSlug:  ev.Slug,
-		EventTitle: ev.Title,
-		Name:       name,
-		Email:      email,
-		GuestCount: guests,
-		Notes:      notes,
-	}
-	blob, err := json.Marshal(st)
-	if err != nil {
-		return err
-	}
-	return db.Update(func(tx *badger.Txn) error {
-		return tx.Set(key, blob)
-	})
-}
-
 func insertWeddingRSVP(
 	db *badger.DB,
 	name, email string,
@@ -244,9 +165,9 @@ func insertWeddingRSVP(
 	if err != nil {
 		suffix = fmt.Sprintf("%d", now.UnixNano())
 	}
-	key := []byte(weddingRsvpKey(now, suffix))
+	key := []byte(rsvpKey(now, suffix))
 
-	st := weddingRsvpStored{
+	st := rsvpStored{
 		ID:         suffix,
 		CreatedAt:  now,
 		Name:       name,
@@ -382,51 +303,6 @@ func listRSVPs(db *badger.DB, limit int) ([]RSVPRow, error) {
 			return nil, err
 		}
 		out = append(out, RSVPRow{
-			ID:         st.ID,
-			CreatedAt:  st.CreatedAt,
-			EventSlug:  st.EventSlug,
-			EventTitle: st.EventTitle,
-			Name:       st.Name,
-			Email:      st.Email,
-			GuestCount: st.GuestCount,
-			Notes:      st.Notes,
-		})
-	}
-	sort.Slice(out, func(i, j int) bool {
-		return out[i].CreatedAt.After(out[j].CreatedAt)
-	})
-	if len(out) > limit {
-		out = out[:limit]
-	}
-	return out, nil
-}
-
-func listWeddingRSVPs(db *badger.DB, limit int) ([]WeddingRSVPRow, error) {
-	if limit <= 0 || limit > 500 {
-		limit = 200
-	}
-	prefix := []byte("rsvp/")
-	itOpts := badger.DefaultIteratorOptions
-	itOpts.Prefix = prefix
-	itOpts.Reverse = false
-	itOpts.PrefetchValues = true
-
-	txn := db.NewTransaction(false)
-	defer txn.Discard()
-
-	iter := txn.NewIterator(itOpts)
-	defer iter.Close()
-
-	out := make([]WeddingRSVPRow, 0)
-	for iter.Rewind(); iter.Valid(); iter.Next() {
-		item := iter.Item()
-		var st weddingRsvpStored
-		if err := item.Value(func(val []byte) error {
-			return json.Unmarshal(val, &st)
-		}); err != nil {
-			return nil, err
-		}
-		out = append(out, WeddingRSVPRow{
 			ID:         st.ID,
 			CreatedAt:  st.CreatedAt,
 			Name:       st.Name,

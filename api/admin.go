@@ -18,7 +18,10 @@ var slugRe = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
 var loginLimiter = newLoginAttemptLimiter()
 
-const maxAdminFormBodyBytes = 32 << 10 // 32 KiB for application/x-www-form-urlencoded
+const (
+	maxAdminFormBodyBytes = 32 << 10 // 32 KiB for application/x-www-form-urlencoded
+	maxSlugLen            = 64
+)
 
 func setAdminCORS(w http.ResponseWriter, corsAllow string) {
 	if corsAllow == "" {
@@ -56,7 +59,6 @@ func registerAdminPreflightRoutes(mux *http.ServeMux, corsAllow string) {
 		"/admin/session",
 		"/admin/contacts",
 		"/admin/rsvps",
-		"/admin/wedding-rsvps",
 		"/admin/events",
 	}
 	for _, p := range paths {
@@ -122,17 +124,6 @@ func mountAdminRoutes(mux *http.ServeMux, db *badger.DB, sessionSecret []byte, p
 		if err != nil {
 			slog.ErrorContext(r.Context(), "admin list rsvps", "err", err)
 			writeJSON(w, http.StatusInternalServerError, errResp{"could not load rsvps"})
-			return
-		}
-		writeJSON(w, http.StatusOK, rows)
-	}))))
-
-	mux.Handle("GET /admin/wedding-rsvps", withAdminCORS(corsAllow, requireAdmin(sessionSecret, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		limit := parseLimit(r.URL.Query().Get("limit"), 200, 500)
-		rows, err := listWeddingRSVPs(db, limit)
-		if err != nil {
-			slog.ErrorContext(r.Context(), "admin list wedding rsvps", "err", err)
-			writeJSON(w, http.StatusInternalServerError, errResp{"could not load wedding rsvps"})
 			return
 		}
 		writeJSON(w, http.StatusOK, rows)
