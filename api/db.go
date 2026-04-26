@@ -91,7 +91,7 @@ func rsvpKey(t time.Time, id string) string {
 }
 
 func weddingRsvpKey(t time.Time, id string) string {
-	return tsKeyPrefix("wedding-rsvp", t) + id
+	return tsKeyPrefix("rsvp", t) + id
 }
 
 type eventStored struct {
@@ -405,7 +405,7 @@ func listWeddingRSVPs(db *badger.DB, limit int) ([]WeddingRSVPRow, error) {
 	if limit <= 0 || limit > 500 {
 		limit = 200
 	}
-	prefix := []byte("wedding-rsvp/")
+	prefix := []byte("rsvp/")
 	itOpts := badger.DefaultIteratorOptions
 	itOpts.Prefix = prefix
 	itOpts.Reverse = false

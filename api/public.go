@@ -24,7 +24,7 @@ const (
 	maxJSONBodyBytes      = 64 << 10 // 64 KiB for POST JSON bodies
 )
 
-// allowedWeddingMealLabels must match `label` in src/mount-wedding-rsvp.ts (MEAL_OPTIONS).
+// allowedWeddingMealLabels must match `label` in src/mount-rsvp.ts (MEAL_OPTIONS).
 var allowedWeddingMealLabels = map[string]struct{}{
 	"Chicken Alfredo":     {},
 	"Scampi":              {},

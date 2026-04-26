@@ -29,7 +29,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # SPA (/, /admin, /wedding-rsvp, …)
+    # SPA (/, /admin, /rsvp, …)
     location / {
         try_files $uri $uri/ /index.html;
     }

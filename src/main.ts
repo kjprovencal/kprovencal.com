@@ -1,7 +1,7 @@
 import { marked } from "marked";
 import { initTheme } from "./theme";
 import { configureMarked } from "./markdown-pipeline";
-import { mountWeddingRsvp, teardownWeddingRsvp } from "./mount-wedding-rsvp";
+import { mountWeddingRsvp, teardownWeddingRsvp } from "./mount-rsvp";
 import { mountAdmin } from "./mount-admin";
 
 configureMarked();
@@ -17,9 +17,14 @@ const ROUTES = [
     load: () => import("../content/index.md?raw").then((m) => m.default),
   },
   {
+    path: "/rsvp",
+    title: "Wedding RSVP",
+    load: () => import("../content/rsvp.md?raw").then((m) => m.default),
+  },
+  {
     path: "/wedding-rsvp",
     title: "Wedding RSVP",
-    load: () => import("../content/wedding-rsvp.md?raw").then((m) => m.default),
+    load: () => import("../content/rsvp.md?raw").then((m) => m.default),
   },
   {
     path: "/admin",
@@ -117,7 +122,7 @@ async function renderRoute(): Promise<void> {
   setRobots(path === "/admin");
   mainEl.classList.toggle("admin-document", path === "/admin");
 
-  if (path === "/wedding-rsvp") {
+  if (path === "/rsvp" || path === "/wedding-rsvp") {
     mountWeddingRsvp();
   } else if (path === "/admin") {
     routeTeardown = mountAdmin();

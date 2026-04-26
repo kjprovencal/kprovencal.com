@@ -69,7 +69,7 @@ function renderMealRows(count: number, container: HTMLElement): void {
 
 export function mountWeddingRsvp(): void {
   const form = document.getElementById(
-    "wedding-rsvp-form"
+    "rsvp-form"
   ) as HTMLFormElement | null;
   const guestSelect = document.getElementById(
     "rsvp-guest-count"

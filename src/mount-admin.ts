@@ -196,6 +196,7 @@ const LIST_REGISTRY: Record<string, ListHandler> = {
 
 /** Slug on `@table` line → registry key (API path segment after `/admin/`). */
 const SLUG_ALIASES: Record<string, string> = {
+  rsvp: "rsvps",
   "wedding-rsvp": "wedding-rsvps",
 };
 
