@@ -208,8 +208,8 @@ func handleRSVP(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 	notes := strings.TrimSpace(in.Notes)
 	guests := in.GuestCount
 
-	if guests < 1 {
-		writePlainError(w, http.StatusBadRequest, "Please choose at least one guest.")
+	if guests < 0 {
+		writePlainError(w, http.StatusBadRequest, "How did you get a negative number of guests?")
 		return
 	}
 	if guests > maxWeddingMealLines {
