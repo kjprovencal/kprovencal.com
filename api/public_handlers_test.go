@@ -67,6 +67,12 @@ var RSVPTestCases = []struct {
 	expectedBody string
 }{
 	{
+		name:         "no guests",
+		body:         `{"name":"Ada","email":"ada@example.com","guest_count":0,"meals":[],"notes":""}`,
+		expectedCode: http.StatusNoContent,
+		expectedBody: "",
+	},
+	{
 		name:         "one guest",
 		body:         `{"name":"Ada","email":"ada@example.com","guest_count":1,"meals":["Guest 1: Chicken Alfredo"],"notes":""}`,
 		expectedCode: http.StatusNoContent,
