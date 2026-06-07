@@ -244,11 +244,11 @@ type AdminLogsResponse = {
 };
 
 async function loadAdminLogs(
-  host: HTMLElement,
+  root: HTMLElement,
   statusEl: HTMLElement | null
 ): Promise<void> {
-  const pre = host.querySelector("#admin-logs-view");
-  const hint = host.querySelector("#admin-logs-hint");
+  const pre = root.querySelector("#admin-logs-view");
+  const hint = root.querySelector("#admin-logs-hint");
   if (!(pre instanceof HTMLElement)) return;
 
   pre.textContent = "Loading…";
@@ -377,9 +377,9 @@ function buildTabsAndPanels(
     refresh.addEventListener(
       "click",
       () => {
-        const statusEl = host.querySelector("#admin-status");
+        const statusEl = root.querySelector("#admin-status");
         void loadAdminLogs(
-          host,
+          root,
           statusEl instanceof HTMLElement ? statusEl : null
         );
       },
@@ -403,24 +403,24 @@ function buildTabsAndPanels(
 }
 
 function setupTabs(
-  host: HTMLElement,
+  root: HTMLElement,
   signal: AbortSignal,
   onTabShown?: (panel: HTMLElement) => void
 ): void {
-  host.querySelectorAll<HTMLButtonElement>("#admin-tablist .admin-tab").forEach((btn) => {
+  root.querySelectorAll<HTMLButtonElement>("#admin-tablist .admin-tab").forEach((btn) => {
     btn.addEventListener(
       "click",
       () => {
         const idx = btn.dataset.tab;
         if (idx === undefined) return;
 
-        host.querySelectorAll<HTMLButtonElement>("#admin-tablist .admin-tab").forEach((t) => {
+        root.querySelectorAll<HTMLButtonElement>("#admin-tablist .admin-tab").forEach((t) => {
           const active = t === btn;
           t.classList.toggle("admin-tab--active", active);
           t.setAttribute("aria-selected", active ? "true" : "false");
         });
 
-        host.querySelectorAll<HTMLElement>("#admin-panel-mount .admin-tab-panel").forEach((panel) => {
+        root.querySelectorAll<HTMLElement>("#admin-panel-mount .admin-tab-panel").forEach((panel) => {
           const on = panel.id === `tab-panel-${idx}`;
           panel.classList.toggle("admin-tab-panel--active", on);
           panel.toggleAttribute("hidden", !on);
@@ -479,9 +479,9 @@ export function mountAdmin(): () => void {
   }
 
   async function loadSubmissions(): Promise<void> {
-    const host = document.getElementById("admin-app");
-    if (!host) return;
-    const wraps = host.querySelectorAll<HTMLDivElement>(
+    const root = document.getElementById("admin-app");
+    if (!root) return;
+    const wraps = root.querySelectorAll<HTMLDivElement>(
       "#admin-panel-mount .admin-table-wrap[data-admin-slug]"
     );
     if (!wraps.length || !adminStatus) return;
