@@ -7,7 +7,6 @@ import (
 )
 
 func TestWithRateLimit_BlocksExcessGETs(t *testing.T) {
-	t.Parallel()
 	rateLimitDisabled = false
 	getRateLimiter = newSlidingWindowLimiter(defaultGetRateWindow, 3)
 	postRateLimiter = newSlidingWindowLimiter(defaultPostRateWindow, 3)
@@ -37,7 +36,6 @@ func TestWithRateLimit_BlocksExcessGETs(t *testing.T) {
 }
 
 func TestWithRateLimit_HealthzExempt(t *testing.T) {
-	t.Parallel()
 	rateLimitDisabled = false
 	getRateLimiter = newSlidingWindowLimiter(defaultGetRateWindow, 1)
 	postRateLimiter = newSlidingWindowLimiter(defaultPostRateWindow, 1)
