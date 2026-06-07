@@ -153,6 +153,14 @@ func mountPublicAPI(mux *http.ServeMux, db *badger.DB, corsAllow string) {
 		corsHeaders(w, corsAllow, []string{"POST", "OPTIONS"})
 		w.WriteHeader(http.StatusNoContent)
 	})
+	mux.HandleFunc("POST /api/rsvp-abandon", func(w http.ResponseWriter, r *http.Request) {
+		corsHeaders(w, corsAllow, []string{"POST", "OPTIONS"})
+		handleRsvpAbandon(w, r, db)
+	})
+	mux.HandleFunc("OPTIONS /api/rsvp-abandon", func(w http.ResponseWriter, r *http.Request) {
+		corsHeaders(w, corsAllow, []string{"POST", "OPTIONS"})
+		w.WriteHeader(http.StatusNoContent)
+	})
 }
 
 type contactIn struct {

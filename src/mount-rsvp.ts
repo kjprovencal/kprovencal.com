@@ -57,6 +57,85 @@ function loadTurnstileScript(): Promise<void> {
 
 let turnstileWidgetId: string | undefined;
 
+type RsvpAbandonReason = "navigate" | "unload";
+
+let rsvpStarted = false;
+let rsvpSubmitted = false;
+let rsvpAbandonReported = false;
+let rsvpPageHideHandler: (() => void) | undefined;
+
+function resetRsvpAbandonState(): void {
+  rsvpStarted = false;
+  rsvpSubmitted = false;
+  rsvpAbandonReported = false;
+}
+
+function collectRsvpSnapshot(
+  form: HTMLFormElement,
+  guestSelect: HTMLSelectElement | null
+): {
+  name: string;
+  email: string;
+  guest_count?: number;
+  meals: string[];
+  notes: string;
+} {
+  const fd = new FormData(form);
+  const name = String(fd.get("name") ?? "").trim();
+  const email = String(fd.get("email") ?? "").trim();
+  const notes = String(fd.get("notes") ?? "").trim();
+  const guestRaw = guestSelect?.value ?? "";
+  const guest_count =
+    guestRaw === "" ? undefined : Number(guestRaw);
+
+  const meals: string[] = [];
+  if (guest_count !== undefined && guest_count > 0) {
+    for (let i = 1; i <= guest_count; i++) {
+      const v = String(fd.get(`meal_${i}`) ?? "").trim();
+      if (!v) continue;
+      const label = MEAL_OPTIONS.find((o) => o.value === v)?.label ?? v;
+      meals.push(`Guest ${i}: ${label}`);
+    }
+  }
+
+  return { name, email, guest_count, meals, notes };
+}
+
+function sendRsvpAbandon(
+  payload: ReturnType<typeof collectRsvpSnapshot> & { reason: RsvpAbandonReason }
+): void {
+  const url = publicApiUrl("/api/rsvp-abandon");
+  const body = JSON.stringify(payload);
+
+  if (typeof navigator.sendBeacon === "function") {
+    const ok = navigator.sendBeacon(
+      url,
+      new Blob([body], { type: "application/json" })
+    );
+    if (ok) return;
+  }
+
+  void fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body,
+    keepalive: true,
+    credentials: "same-origin",
+  }).catch(() => {
+    /* best-effort telemetry */
+  });
+}
+
+function reportRsvpAbandon(
+  form: HTMLFormElement | null,
+  guestSelect: HTMLSelectElement | null,
+  reason: RsvpAbandonReason
+): void {
+  if (!form || !rsvpStarted || rsvpSubmitted || rsvpAbandonReported) return;
+  rsvpAbandonReported = true;
+  sendRsvpAbandon({ ...collectRsvpSnapshot(form, guestSelect), reason });
+}
+
 function renderMealRows(count: number, container: HTMLElement): void {
   if (!Number.isFinite(count) || count < 1) {
     container.innerHTML = "";
@@ -68,6 +147,8 @@ function renderMealRows(count: number, container: HTMLElement): void {
 }
 
 export function mountWeddingRsvp(): void {
+  resetRsvpAbandonState();
+
   const form = document.getElementById(
     "rsvp-form"
   ) as HTMLFormElement | null;
@@ -120,8 +201,13 @@ export function mountWeddingRsvp(): void {
     }
   }
 
+  const markStarted = (): void => {
+    rsvpStarted = true;
+  };
+
   if (guestSelect && mealContainer) {
     guestSelect.addEventListener("change", () => {
+      markStarted();
       const n = Number(guestSelect.value);
       renderMealRows(n, mealContainer);
       if (statusEl) statusEl.textContent = "";
@@ -130,9 +216,16 @@ export function mountWeddingRsvp(): void {
 
   if (form) {
     form.addEventListener("input", () => {
+      markStarted();
       refreshSubmitEnabled();
     });
+    form.addEventListener("change", markStarted);
   }
+
+  rsvpPageHideHandler = () => {
+    reportRsvpAbandon(form, guestSelect, "unload");
+  };
+  window.addEventListener("pagehide", rsvpPageHideHandler);
 
   void initTurnstile();
 
@@ -232,6 +325,7 @@ export function mountWeddingRsvp(): void {
         confirmation.tabIndex = -1;
         confirmation.textContent =
           "Thanks — your RSVP has been submitted. We'll send you a confirmation email shortly.";
+        rsvpSubmitted = true;
         form.insertAdjacentElement("afterend", confirmation);
         form.hidden = true;
         confirmation.focus();
@@ -247,6 +341,19 @@ export function mountWeddingRsvp(): void {
 }
 
 export function teardownWeddingRsvp(): void {
+  const form = document.getElementById(
+    "rsvp-form"
+  ) as HTMLFormElement | null;
+  const guestSelect = document.getElementById(
+    "rsvp-guest-count"
+  ) as HTMLSelectElement | null;
+  reportRsvpAbandon(form, guestSelect, "navigate");
+
+  if (rsvpPageHideHandler) {
+    window.removeEventListener("pagehide", rsvpPageHideHandler);
+    rsvpPageHideHandler = undefined;
+  }
+
   if (turnstileWidgetId !== undefined && window.turnstile) {
     try {
       window.turnstile.remove(turnstileWidgetId);

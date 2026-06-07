@@ -53,6 +53,17 @@ type RSVPRow struct {
 	Notes      string    `json:"notes"`
 }
 
+type RsvpAbandonRow struct {
+	ID         string    `json:"id"`
+	CreatedAt  time.Time `json:"created_at"`
+	Name       string    `json:"name"`
+	Email      string    `json:"email"`
+	GuestCount int       `json:"guest_count"` // -1 when party size was not chosen
+	Meals      []string  `json:"meals"`
+	Notes      string    `json:"notes"`
+	Reason     string    `json:"reason"`
+}
+
 type ClientErrorRow struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
@@ -95,6 +106,10 @@ func clientErrorKey(t time.Time, id string) string {
 	return tsKeyPrefix("client-error", t) + id
 }
 
+func rsvpAbandonKey(t time.Time, id string) string {
+	return tsKeyPrefix("rsvp-abandon", t) + id
+}
+
 type eventStored struct {
 	Slug      string    `json:"slug"`
 	Title     string    `json:"title"`
@@ -118,6 +133,17 @@ type rsvpStored struct {
 	GuestCount int       `json:"guest_count"`
 	Meals      []string  `json:"meals"`
 	Notes      string    `json:"notes"`
+}
+
+type rsvpAbandonStored struct {
+	ID         string    `json:"id"`
+	CreatedAt  time.Time `json:"created_at"`
+	Name       string    `json:"name"`
+	Email      string    `json:"email"`
+	GuestCount int       `json:"guest_count"`
+	Meals      []string  `json:"meals"`
+	Notes      string    `json:"notes"`
+	Reason     string    `json:"reason"`
 }
 
 type clientErrorStored struct {
@@ -421,6 +447,84 @@ func listClientErrors(db *badger.DB, limit int) ([]ClientErrorRow, error) {
 			Column:    st.Column,
 			Stack:     st.Stack,
 			UserAgent: st.UserAgent,
+		})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].CreatedAt.After(out[j].CreatedAt)
+	})
+	if len(out) > limit {
+		out = out[:limit]
+	}
+	return out, nil
+}
+
+func insertRsvpAbandon(
+	db *badger.DB,
+	name, email string,
+	guestCount int,
+	meals []string,
+	notes, reason string,
+) error {
+	now := time.Now().UTC()
+	suffix, err := randomID(8)
+	if err != nil {
+		suffix = fmt.Sprintf("%d", now.UnixNano())
+	}
+	key := []byte(rsvpAbandonKey(now, suffix))
+
+	st := rsvpAbandonStored{
+		ID:         suffix,
+		CreatedAt:  now,
+		Name:       name,
+		Email:      email,
+		GuestCount: guestCount,
+		Meals:      meals,
+		Notes:      notes,
+		Reason:     reason,
+	}
+	blob, err := json.Marshal(st)
+	if err != nil {
+		return err
+	}
+	return db.Update(func(tx *badger.Txn) error {
+		return tx.Set(key, blob)
+	})
+}
+
+func listRsvpAbandons(db *badger.DB, limit int) ([]RsvpAbandonRow, error) {
+	if limit <= 0 || limit > 500 {
+		limit = 200
+	}
+	prefix := []byte("rsvp-abandon/")
+	itOpts := badger.DefaultIteratorOptions
+	itOpts.Prefix = prefix
+	itOpts.Reverse = false
+	itOpts.PrefetchValues = true
+
+	txn := db.NewTransaction(false)
+	defer txn.Discard()
+
+	iter := txn.NewIterator(itOpts)
+	defer iter.Close()
+
+	out := make([]RsvpAbandonRow, 0)
+	for iter.Rewind(); iter.Valid(); iter.Next() {
+		item := iter.Item()
+		var st rsvpAbandonStored
+		if err := item.Value(func(val []byte) error {
+			return json.Unmarshal(val, &st)
+		}); err != nil {
+			return nil, err
+		}
+		out = append(out, RsvpAbandonRow{
+			ID:         st.ID,
+			CreatedAt:  st.CreatedAt,
+			Name:       st.Name,
+			Email:      st.Email,
+			GuestCount: st.GuestCount,
+			Meals:      st.Meals,
+			Notes:      st.Notes,
+			Reason:     st.Reason,
 		})
 	}
 	sort.Slice(out, func(i, j int) bool {

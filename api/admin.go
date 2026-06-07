@@ -59,6 +59,7 @@ func registerAdminPreflightRoutes(mux *http.ServeMux, corsAllow string) {
 		"/admin/rsvps",
 		"/admin/logs",
 		"/admin/client-errors",
+		"/admin/rsvp-abandons",
 		"/admin/events",
 	}
 	for _, p := range paths {
@@ -198,6 +199,17 @@ func mountAdminRoutes(mux *http.ServeMux, db *badger.DB, sessionSecret []byte, p
 		if err != nil {
 			slog.ErrorContext(r.Context(), "admin list client errors", "err", err)
 			writeJSON(w, http.StatusInternalServerError, errResp{"could not load client errors"})
+			return
+		}
+		writeJSON(w, http.StatusOK, rows)
+	}))))
+
+	mux.Handle("GET /admin/rsvp-abandons", withAdminCORS(corsAllow, requireAdmin(sessionSecret, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		limit := parseLimit(r.URL.Query().Get("limit"), 200, 500)
+		rows, err := listRsvpAbandons(db, limit)
+		if err != nil {
+			slog.ErrorContext(r.Context(), "admin list rsvp abandons", "err", err)
+			writeJSON(w, http.StatusInternalServerError, errResp{"could not load incomplete rsvps"})
 			return
 		}
 		writeJSON(w, http.StatusOK, rows)

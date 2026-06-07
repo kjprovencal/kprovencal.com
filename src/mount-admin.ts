@@ -24,6 +24,17 @@ type ContactRow = {
   message: string;
 };
 
+type RsvpAbandonRow = {
+  id: string;
+  created_at: string;
+  name: string;
+  email: string;
+  guest_count: number;
+  meals?: string[];
+  notes: string;
+  reason: string;
+};
+
 type ClientErrorRow = {
   id: string;
   created_at: string;
@@ -97,6 +108,25 @@ function weddingRowsHtml(rows: WeddingRSVP[], colspan: number): string {
           r.notes || "—"
         )}</td></tr>`
     )
+    .join("");
+}
+
+function rsvpAbandonRowsHtml(rows: RsvpAbandonRow[], colspan: number): string {
+  if (rows.length === 0) {
+    return `<tr><td colspan="${colspan}" class="admin-empty">No incomplete RSVPs yet.</td></tr>`;
+  }
+  return rows
+    .map((r) => {
+      const guests =
+        r.guest_count < 0 ? "—" : escapeHtml(String(r.guest_count));
+      return `<tr><td>${escapeHtml(formatWhen(r.created_at))}</td><td>${escapeHtml(
+        r.reason || "—"
+      )}</td><td>${escapeHtml(r.name || "—")}</td><td>${escapeHtml(
+        r.email || "—"
+      )}</td><td>${guests}</td><td>${mealListHtml(
+        r.meals ?? []
+      )}</td><td class="admin-cell-notes">${escapeHtml(r.notes || "—")}</td></tr>`;
+    })
     .join("");
 }
 
@@ -183,6 +213,11 @@ const LIST_REGISTRY: Record<string, ListHandler> = {
     path: "/admin/rsvps",
     render: (data, colspan) =>
       weddingRowsHtml(data as WeddingRSVP[], colspan),
+  },
+  "rsvp-abandons": {
+    path: "/admin/rsvp-abandons",
+    render: (data, colspan) =>
+      rsvpAbandonRowsHtml(data as RsvpAbandonRow[], colspan),
   },
   contacts: {
     path: "/admin/contacts",

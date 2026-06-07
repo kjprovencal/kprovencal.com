@@ -96,6 +96,7 @@ On **push to `main`**, after tests pass, the **`deploy`** job rsyncs **`dist/`**
 | `POST` | `/api/contact`         | JSON contact form                                                      |
 | `POST` | `/api/rsvp`            | JSON RSVP (guests, meals, notes); optional Turnstile if `TURNSTILE_SECRET_KEY` is set |
 | `POST` | `/api/client-errors`   | JSON frontend error report (`kind`, `message`, `page`, optional `source`/`line`/`stack`) |
+| `POST` | `/api/rsvp-abandon`    | JSON partial RSVP when the user leaves without submitting (`name`, `email`, `guest_count`, partial `meals`, `notes`, `reason`) |
 | `POST` | `/admin/login`         | Form: `password` → sets session cookie                                 |
 | `POST` | `/admin/logout`        | Clears session (authenticated)                                         |
 | `GET`  | `/admin/session`       | `{ "authenticated": true }` if cookie valid                            |
@@ -103,10 +104,11 @@ On **push to `main`**, after tests pass, the **`deploy`** job rsyncs **`dist/`**
 | `GET`  | `/admin/rsvps`         | JSON list of RSVPs (authenticated)                                    |
 | `GET`  | `/admin/logs`          | Tail or time range of `LOG_PATH` (authenticated). Query: `limit` (max 500), `since`, `until` (RFC3339 or `YYYY-MM-DD`; date-only `until` is end of that UTC day). Response includes `matched`, `truncated` when the file exceeds the scan window. |
 | `GET`  | `/admin/client-errors` | JSON list of frontend errors (authenticated)                           |
+| `GET`  | `/admin/rsvp-abandons` | JSON list of incomplete RSVP form sessions (authenticated)             |
 | `GET`  | `/admin/events`        | JSON list (authenticated)                                              |
 | `POST` | `/admin/events`        | Create event (form body; authenticated)                                |
 
-`OPTIONS` on `/api/contact`, `/api/rsvp`, and `/api/client-errors` returns CORS preflight headers when `CORS_ORIGIN` is set. The same applies to **`/admin/*`** routes when the admin UI is loaded from another origin (credentialed `fetch`).
+`OPTIONS` on `/api/contact`, `/api/rsvp`, `/api/client-errors`, and `/api/rsvp-abandon` returns CORS preflight headers when `CORS_ORIGIN` is set. The same applies to **`/admin/*`** routes when the admin UI is loaded from another origin (credentialed `fetch`).
 
 ## Admin UI (static site)
 

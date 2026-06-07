@@ -11,6 +11,11 @@ Use the password configured for this site’s API to sign in. You can review use
 | When | Name | Email | Guests | Meals | Notes |
 | ---- | ---- | ----- | ------ | ----- | ----- |
 
+@table rsvp-abandons Incomplete RSVPs
+
+| When | Reason | Name | Email | Guests | Meals | Notes |
+| ---- | ------ | ---- | ----- | ------ | ----- | ----- |
+
 @table contacts Contacts
 
 | When | Name | Email | Message |
