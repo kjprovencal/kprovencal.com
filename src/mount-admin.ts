@@ -24,6 +24,19 @@ type ContactRow = {
   message: string;
 };
 
+type ClientErrorRow = {
+  id: string;
+  created_at: string;
+  kind: string;
+  message: string;
+  page: string;
+  source?: string;
+  line?: number;
+  column?: number;
+  stack?: string;
+  user_agent?: string;
+};
+
 type AdminTableSpec = {
   table: HTMLTableElement;
   slug: string;
@@ -84,6 +97,26 @@ function weddingRowsHtml(rows: WeddingRSVP[], colspan: number): string {
           r.notes || "—"
         )}</td></tr>`
     )
+    .join("");
+}
+
+function clientErrorRowsHtml(rows: ClientErrorRow[], colspan: number): string {
+  if (rows.length === 0) {
+    return `<tr><td colspan="${colspan}" class="admin-empty">No frontend errors yet.</td></tr>`;
+  }
+  return rows
+    .map((r) => {
+      const loc =
+        r.source && r.line
+          ? `${r.source}:${r.line}${r.column ? `:${r.column}` : ""}`
+          : r.source ?? "—";
+      const detail = [r.message, r.stack ? `\n${r.stack}` : ""].join("");
+      return `<tr><td>${escapeHtml(formatWhen(r.created_at))}</td><td>${escapeHtml(
+        r.kind
+      )}</td><td>${escapeHtml(r.page || "—")}</td><td class="admin-cell-notes">${escapeHtml(
+        loc
+      )}</td><td class="admin-cell-notes">${escapeHtml(detail)}</td></tr>`;
+    })
     .join("");
 }
 
@@ -155,6 +188,11 @@ const LIST_REGISTRY: Record<string, ListHandler> = {
     path: "/admin/contacts",
     render: (data, colspan) =>
       contactRowsHtml(data as ContactRow[], colspan),
+  },
+  "client-errors": {
+    path: "/admin/client-errors",
+    render: (data, colspan) =>
+      clientErrorRowsHtml(data as ClientErrorRow[], colspan),
   },
 };
 

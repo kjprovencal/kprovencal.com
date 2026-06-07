@@ -58,6 +58,7 @@ func registerAdminPreflightRoutes(mux *http.ServeMux, corsAllow string) {
 		"/admin/contacts",
 		"/admin/rsvps",
 		"/admin/logs",
+		"/admin/client-errors",
 		"/admin/events",
 	}
 	for _, p := range paths {
@@ -189,6 +190,17 @@ func mountAdminRoutes(mux *http.ServeMux, db *badger.DB, sessionSecret []byte, p
 			out["until"] = untilPtr.Format(time.RFC3339)
 		}
 		writeJSON(w, http.StatusOK, out)
+	}))))
+
+	mux.Handle("GET /admin/client-errors", withAdminCORS(corsAllow, requireAdmin(sessionSecret, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		limit := parseLimit(r.URL.Query().Get("limit"), 200, 500)
+		rows, err := listClientErrors(db, limit)
+		if err != nil {
+			slog.ErrorContext(r.Context(), "admin list client errors", "err", err)
+			writeJSON(w, http.StatusInternalServerError, errResp{"could not load client errors"})
+			return
+		}
+		writeJSON(w, http.StatusOK, rows)
 	}))))
 
 	mux.Handle("GET /admin/events", withAdminCORS(corsAllow, requireAdmin(sessionSecret, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

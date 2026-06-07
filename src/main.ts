@@ -1,10 +1,12 @@
 import { marked } from "marked";
+import { initClientErrorReporting } from "./client-errors";
 import { initTheme } from "./theme";
 import { configureMarked } from "./markdown-pipeline";
 import { mountWeddingRsvp, teardownWeddingRsvp } from "./mount-rsvp";
 import { mountAdmin } from "./mount-admin";
 
 configureMarked();
+initClientErrorReporting();
 
 const contentRoot = document.getElementById("content");
 const mainEl = document.getElementById("main");

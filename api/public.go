@@ -145,6 +145,14 @@ func mountPublicAPI(mux *http.ServeMux, db *badger.DB, corsAllow string) {
 		corsHeaders(w, corsAllow, []string{"POST", "OPTIONS"})
 		w.WriteHeader(http.StatusNoContent)
 	})
+	mux.HandleFunc("POST /api/client-errors", func(w http.ResponseWriter, r *http.Request) {
+		corsHeaders(w, corsAllow, []string{"POST", "OPTIONS"})
+		handleClientError(w, r, db)
+	})
+	mux.HandleFunc("OPTIONS /api/client-errors", func(w http.ResponseWriter, r *http.Request) {
+		corsHeaders(w, corsAllow, []string{"POST", "OPTIONS"})
+		w.WriteHeader(http.StatusNoContent)
+	})
 }
 
 type contactIn struct {

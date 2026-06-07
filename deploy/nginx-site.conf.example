@@ -30,7 +30,7 @@ server {
     }
 
     # Admin API only (not the SPA HTML route — see location / below)
-    location ~ ^/admin/(login|logout|session|contacts|rsvps|logs|events) {
+    location ~ ^/admin/(login|logout|session|contacts|rsvps|logs|client-errors|events) {
         limit_req zone=personal_site_api burst=24 nodelay;
         limit_req_status 429;
 

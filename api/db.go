@@ -53,6 +53,19 @@ type RSVPRow struct {
 	Notes      string    `json:"notes"`
 }
 
+type ClientErrorRow struct {
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	Kind      string    `json:"kind"`
+	Message   string    `json:"message"`
+	Page      string    `json:"page"`
+	Source    string    `json:"source,omitempty"`
+	Line      int       `json:"line,omitempty"`
+	Column    int       `json:"column,omitempty"`
+	Stack     string    `json:"stack,omitempty"`
+	UserAgent string    `json:"user_agent,omitempty"`
+}
+
 func eventKey(slug string) []byte {
 	return []byte("event/" + strings.ToLower(strings.TrimSpace(slug)))
 }
@@ -78,6 +91,10 @@ func rsvpKey(t time.Time, id string) string {
 	return tsKeyPrefix("rsvp", t) + id
 }
 
+func clientErrorKey(t time.Time, id string) string {
+	return tsKeyPrefix("client-error", t) + id
+}
+
 type eventStored struct {
 	Slug      string    `json:"slug"`
 	Title     string    `json:"title"`
@@ -101,6 +118,19 @@ type rsvpStored struct {
 	GuestCount int       `json:"guest_count"`
 	Meals      []string  `json:"meals"`
 	Notes      string    `json:"notes"`
+}
+
+type clientErrorStored struct {
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	Kind      string    `json:"kind"`
+	Message   string    `json:"message"`
+	Page      string    `json:"page"`
+	Source    string    `json:"source,omitempty"`
+	Line      int       `json:"line,omitempty"`
+	Column    int       `json:"column,omitempty"`
+	Stack     string    `json:"stack,omitempty"`
+	UserAgent string    `json:"user_agent,omitempty"`
 }
 
 func insertEvent(db *badger.DB, slug, title string, published bool) error {
@@ -310,6 +340,87 @@ func listRSVPs(db *badger.DB, limit int) ([]RSVPRow, error) {
 			GuestCount: st.GuestCount,
 			Meals:      st.Meals,
 			Notes:      st.Notes,
+		})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].CreatedAt.After(out[j].CreatedAt)
+	})
+	if len(out) > limit {
+		out = out[:limit]
+	}
+	return out, nil
+}
+
+func insertClientError(
+	db *badger.DB,
+	kind, message, page, source string,
+	line, column int,
+	stack, userAgent string,
+) error {
+	now := time.Now().UTC()
+	suffix, err := randomID(8)
+	if err != nil {
+		suffix = fmt.Sprintf("%d", now.UnixNano())
+	}
+	key := []byte(clientErrorKey(now, suffix))
+
+	st := clientErrorStored{
+		ID:        suffix,
+		CreatedAt: now,
+		Kind:      kind,
+		Message:   message,
+		Page:      page,
+		Source:    source,
+		Line:      line,
+		Column:    column,
+		Stack:     stack,
+		UserAgent: userAgent,
+	}
+	blob, err := json.Marshal(st)
+	if err != nil {
+		return err
+	}
+	return db.Update(func(tx *badger.Txn) error {
+		return tx.Set(key, blob)
+	})
+}
+
+func listClientErrors(db *badger.DB, limit int) ([]ClientErrorRow, error) {
+	if limit <= 0 || limit > 500 {
+		limit = 200
+	}
+	prefix := []byte("client-error/")
+	itOpts := badger.DefaultIteratorOptions
+	itOpts.Prefix = prefix
+	itOpts.Reverse = false
+	itOpts.PrefetchValues = true
+
+	txn := db.NewTransaction(false)
+	defer txn.Discard()
+
+	iter := txn.NewIterator(itOpts)
+	defer iter.Close()
+
+	out := make([]ClientErrorRow, 0)
+	for iter.Rewind(); iter.Valid(); iter.Next() {
+		item := iter.Item()
+		var st clientErrorStored
+		if err := item.Value(func(val []byte) error {
+			return json.Unmarshal(val, &st)
+		}); err != nil {
+			return nil, err
+		}
+		out = append(out, ClientErrorRow{
+			ID:        st.ID,
+			CreatedAt: st.CreatedAt,
+			Kind:      st.Kind,
+			Message:   st.Message,
+			Page:      st.Page,
+			Source:    st.Source,
+			Line:      st.Line,
+			Column:    st.Column,
+			Stack:     st.Stack,
+			UserAgent: st.UserAgent,
 		})
 	}
 	sort.Slice(out, func(i, j int) bool {

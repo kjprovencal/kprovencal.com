@@ -158,6 +158,54 @@ func TestContactPOST(t *testing.T) {
 	}
 }
 
+func TestClientErrorPOST(t *testing.T) {
+	cases := []struct {
+		name         string
+		body         string
+		expectedCode int
+		expectedBody string
+	}{
+		{
+			name:         "success",
+			body:         `{"kind":"error","message":"boom","page":"/rsvp","source":"app.js","line":12,"column":3,"stack":"Error: boom"}`,
+			expectedCode: http.StatusNoContent,
+			expectedBody: "",
+		},
+		{
+			name:         "missing message",
+			body:         `{"kind":"error","message":"","page":"/"}`,
+			expectedCode: http.StatusBadRequest,
+			expectedBody: "message is required",
+		},
+		{
+			name:         "message too long",
+			body:         `{"message":"` + strings.Repeat("x", maxClientErrorMessage+1) + `"}`,
+			expectedCode: http.StatusBadRequest,
+			expectedBody: "field too long",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			db := newTestDB(t)
+			mux := http.NewServeMux()
+			mountPublicAPI(mux, db, "")
+
+			req := httptest.NewRequest(http.MethodPost, "/api/client-errors", strings.NewReader(tc.body))
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+			mux.ServeHTTP(rec, req)
+
+			if rec.Code != tc.expectedCode {
+				t.Fatalf("status %d want %d", rec.Code, tc.expectedCode)
+			}
+			if !strings.Contains(rec.Body.String(), tc.expectedBody) {
+				t.Fatalf("body %q does not contain %q", rec.Body.String(), tc.expectedBody)
+			}
+		})
+	}
+}
+
 func TestWeddingRSVPPOST(t *testing.T) {
 	for _, tc := range RSVPTestCases {
 		t.Run(tc.name, func(t *testing.T) {

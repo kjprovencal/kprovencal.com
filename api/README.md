@@ -29,6 +29,8 @@ The server logs to **stderr** with `log/slog` (text format). On the droplet, sys
 
 Everything at or above **`LOG_LEVEL`** is stored — default **`info`** includes **every HTTP request** (`method`, `path`, `status`, `duration_ms`, `remote_addr`), plus warnings and errors. **`LOG_LEVEL=error`** keeps only errors (no request lines). Set **`LOG_LEVEL=debug`** for extra auth detail. Passwords, tokens, and full cookies are never logged.
 
+**Frontend errors** are reported by the SPA (`window.onerror` and `unhandledrejection`) to **`POST /api/client-errors`**, stored in Badger, logged at **`warn`** with `kind`, `page`, and `message`, and listed in **Admin → Frontend errors** (`GET /admin/client-errors`). No third-party service (e.g. Sentry) is required.
+
 ## Rate limiting
 
 **Nginx (production):** `deploy/nginx-http-rate-limits.conf.example` defines per-IP `limit_req` zones; `deploy/nginx-site.conf.example` applies them to static files, the SPA, `/api`, and admin API paths. This is the main defense against bots probing random URLs.
@@ -93,16 +95,18 @@ On **push to `main`**, after tests pass, the **`deploy`** job rsyncs **`dist/`**
 | `GET`  | `/api/events`          | Published events (slug + title)                                        |
 | `POST` | `/api/contact`         | JSON contact form                                                      |
 | `POST` | `/api/rsvp`            | JSON RSVP (guests, meals, notes); optional Turnstile if `TURNSTILE_SECRET_KEY` is set |
+| `POST` | `/api/client-errors`   | JSON frontend error report (`kind`, `message`, `page`, optional `source`/`line`/`stack`) |
 | `POST` | `/admin/login`         | Form: `password` → sets session cookie                                 |
 | `POST` | `/admin/logout`        | Clears session (authenticated)                                         |
 | `GET`  | `/admin/session`       | `{ "authenticated": true }` if cookie valid                            |
 | `GET`  | `/admin/contacts`      | JSON list (authenticated)                                              |
 | `GET`  | `/admin/rsvps`         | JSON list of RSVPs (authenticated)                                    |
 | `GET`  | `/admin/logs`          | Tail or time range of `LOG_PATH` (authenticated). Query: `limit` (max 500), `since`, `until` (RFC3339 or `YYYY-MM-DD`; date-only `until` is end of that UTC day). Response includes `matched`, `truncated` when the file exceeds the scan window. |
+| `GET`  | `/admin/client-errors` | JSON list of frontend errors (authenticated)                           |
 | `GET`  | `/admin/events`        | JSON list (authenticated)                                              |
 | `POST` | `/admin/events`        | Create event (form body; authenticated)                                |
 
-`OPTIONS` on `/api/contact` and `/api/rsvp` returns CORS preflight headers when `CORS_ORIGIN` is set. The same applies to **`/admin/*`** routes when the admin UI is loaded from another origin (credentialed `fetch`).
+`OPTIONS` on `/api/contact`, `/api/rsvp`, and `/api/client-errors` returns CORS preflight headers when `CORS_ORIGIN` is set. The same applies to **`/admin/*`** routes when the admin UI is loaded from another origin (credentialed `fetch`).
 
 ## Admin UI (static site)
 

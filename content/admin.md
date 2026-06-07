@@ -16,4 +16,9 @@ Use the password configured for this site’s API to sign in. You can review use
 | When | Name | Email | Message |
 | ---- | ---- | ----- | ------- |
 
+@table client-errors Frontend errors
+
+| When | Kind | Page | Location | Detail |
+| ---- | ---- | ---- | -------- | ------ |
+
 [Dashboard ?slot?](admin-app)
