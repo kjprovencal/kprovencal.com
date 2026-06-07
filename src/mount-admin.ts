@@ -39,6 +39,7 @@ function adminFetch(path: string, init?: RequestInit): Promise<Response> {
   return fetch(publicApiUrl(path), {
     ...init,
     credentials: "include",
+    cache: init?.cache ?? "no-store",
   });
 }
 
@@ -241,7 +242,33 @@ type AdminLogsResponse = {
   path?: string;
   lines?: string[];
   hint?: string;
+  since?: string;
+  until?: string;
+  truncated?: boolean;
+  matched?: number;
+  log_level?: string;
 };
+
+function logRangeISO(value: string): string {
+  if (!value) return "";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+}
+
+function buildAdminLogsUrl(root: HTMLElement): string {
+  const params = new URLSearchParams({ limit: "200" });
+  const sinceEl = root.querySelector("#admin-logs-since");
+  const untilEl = root.querySelector("#admin-logs-until");
+  if (sinceEl instanceof HTMLInputElement && sinceEl.value) {
+    const since = logRangeISO(sinceEl.value);
+    if (since) params.set("since", since);
+  }
+  if (untilEl instanceof HTMLInputElement && untilEl.value) {
+    const until = logRangeISO(untilEl.value);
+    if (until) params.set("until", until);
+  }
+  return `/admin/logs?${params.toString()}`;
+}
 
 async function loadAdminLogs(
   root: HTMLElement,
@@ -258,7 +285,7 @@ async function loadAdminLogs(
   }
 
   try {
-    const res = await adminFetch("/admin/logs?limit=200");
+    const res = await adminFetch(buildAdminLogsUrl(root));
     if (!res.ok) {
       pre.textContent = "Could not load logs.";
       return;
@@ -276,9 +303,37 @@ async function loadAdminLogs(
     }
     const lines = data.lines ?? [];
     pre.textContent =
-      lines.length > 0 ? lines.join("\n") : "(No log lines yet.)";
-    if (hint instanceof HTMLElement && data.path) {
-      hint.textContent = `Tail of ${data.path}`;
+      lines.length > 0 ? lines.join("\n") : "(No log lines in this range.)";
+    if (hint instanceof HTMLElement) {
+      const parts: string[] = [];
+      if (data.log_level) {
+        const lv = data.log_level.toUpperCase();
+        const levelNote =
+          lv === "DEBUG"
+            ? "all slog output"
+            : lv === "INFO"
+              ? "HTTP requests, warnings, errors"
+              : lv === "WARN"
+                ? "warnings and errors only"
+                : lv === "ERROR"
+                  ? "errors only (no request lines)"
+                  : "see LOG_LEVEL";
+        parts.push(`level ${data.log_level} (${levelNote})`);
+      }
+      if (data.path) parts.push(data.path);
+      if (data.since || data.until) {
+        const range = [data.since ?? "…", data.until ?? "…"].join(" → ");
+        parts.push(`range ${range}`);
+      } else {
+        parts.push("latest tail");
+      }
+      if (typeof data.matched === "number") {
+        parts.push(`${data.matched} matched`);
+      }
+      if (data.truncated) {
+        parts.push("file partially scanned (see API docs)");
+      }
+      hint.textContent = parts.join(" · ");
       hint.hidden = false;
     }
     if (statusEl) statusEl.textContent = "";
@@ -353,12 +408,41 @@ function buildTabsAndPanels(
     const toolbar = document.createElement("div");
     toolbar.className = "admin-logs-toolbar";
 
+    const sinceLabel = document.createElement("label");
+    sinceLabel.className = "admin-logs-range-label";
+    sinceLabel.htmlFor = "admin-logs-since";
+    sinceLabel.textContent = "From";
+    const sinceInput = document.createElement("input");
+    sinceInput.type = "datetime-local";
+    sinceInput.id = "admin-logs-since";
+    sinceInput.className = "admin-logs-range-input";
+    sinceLabel.appendChild(sinceInput);
+    toolbar.appendChild(sinceLabel);
+
+    const untilLabel = document.createElement("label");
+    untilLabel.className = "admin-logs-range-label";
+    untilLabel.htmlFor = "admin-logs-until";
+    untilLabel.textContent = "Until";
+    const untilInput = document.createElement("input");
+    untilInput.type = "datetime-local";
+    untilInput.id = "admin-logs-until";
+    untilInput.className = "admin-logs-range-input";
+    untilLabel.appendChild(untilInput);
+    toolbar.appendChild(untilLabel);
+
     const refresh = document.createElement("button");
     refresh.type = "button";
     refresh.id = "admin-logs-refresh";
     refresh.className = "admin-logs-refresh";
     refresh.textContent = "Refresh";
     toolbar.appendChild(refresh);
+
+    const clearRange = document.createElement("button");
+    clearRange.type = "button";
+    clearRange.id = "admin-logs-clear-range";
+    clearRange.className = "admin-logs-refresh";
+    clearRange.textContent = "Clear range";
+    toolbar.appendChild(clearRange);
 
     const hint = document.createElement("p");
     hint.id = "admin-logs-hint";
@@ -374,14 +458,21 @@ function buildTabsAndPanels(
     section.appendChild(pre);
     panelMount.appendChild(section);
 
-    refresh.addEventListener(
+    const reloadLogs = () => {
+      const statusEl = root.querySelector("#admin-status");
+      void loadAdminLogs(
+        root,
+        statusEl instanceof HTMLElement ? statusEl : null
+      );
+    };
+
+    refresh.addEventListener("click", reloadLogs, { signal });
+    clearRange.addEventListener(
       "click",
       () => {
-        const statusEl = root.querySelector("#admin-status");
-        void loadAdminLogs(
-          root,
-          statusEl instanceof HTMLElement ? statusEl : null
-        );
+        sinceInput.value = "";
+        untilInput.value = "";
+        reloadLogs();
       },
       { signal }
     );

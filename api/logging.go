@@ -5,15 +5,20 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
 
-// apiLogPath is set when LOG_PATH is configured (used by GET /admin/logs).
+// apiLogPath is the file tail for GET /admin/logs (empty if file logging is unavailable).
 var apiLogPath string
 
+// apiLogLevel is the active slog minimum level (debug, info, warn, error).
+var apiLogLevel = slog.LevelInfo.String()
+
 // initLogging configures the default slog logger. LOG_LEVEL: debug, info (default), warn, error.
-// When LOG_PATH is set, logs are appended to that file as well as stderr (systemd journal).
+// All slog records at or above that level go to stderr (systemd journal) and, when possible, LOG_PATH.
+// Default LOG_PATH: sibling of BADGER_PATH (e.g. data/api.log next to data/badger).
 func initLogging() {
 	level := slog.LevelInfo
 	switch strings.ToLower(strings.TrimSpace(os.Getenv("LOG_LEVEL"))) {
@@ -24,10 +29,24 @@ func initLogging() {
 	case "error":
 		level = slog.LevelError
 	}
+	apiLogLevel = level.String()
 
 	out := io.Writer(os.Stderr)
 	logPath := strings.TrimSpace(os.Getenv("LOG_PATH"))
+	if logPath == "" {
+		dbPath := strings.TrimSpace(os.Getenv("BADGER_PATH"))
+		if dbPath == "" {
+			dbPath = filepath.Join("data", "badger")
+		}
+		logPath = filepath.Join(filepath.Dir(dbPath), "api.log")
+	}
 	if logPath != "" {
+		if err := os.MkdirAll(filepath.Dir(logPath), 0o755); err != nil {
+			h := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})
+			slog.SetDefault(slog.New(h))
+			slog.Error("cannot create log directory; logging to stderr only", "dir", filepath.Dir(logPath), "err", err)
+			return
+		}
 		f, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o640)
 		if err != nil {
 			h := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})

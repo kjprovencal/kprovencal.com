@@ -31,7 +31,9 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
      APP_ENV=production
      TRUST_PROXY=1
      BADGER_PATH=/var/www/kprovencal/data/badger
-     LOG_PATH=/var/www/kprovencal/data/api.log
+     # LOG_PATH defaults to api.log beside BADGER_PATH; override if needed:
+     # LOG_PATH=/var/www/kprovencal/data/api.log
+     # LOG_LEVEL=info   # default — includes every HTTP request in Admin → Logs
    Optional:
      CORS_ORIGIN=https://your.domain.example   # only if HTML is served from another origin
    For same-origin (nginx proxies /api and /admin API paths), you usually omit CORS_ORIGIN.
@@ -78,8 +80,9 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
    Nginx (not the Go API):
      /var/log/nginx/access.log
      /var/log/nginx/error.log
-   To tail logs from the Admin → Logs tab, set LOG_PATH (see step 3), ensure www-data can write it
-   (e.g. touch the file and chown www-data:www-data), then restart personal-site-api.
+   Admin → Logs reads data/api.log (or LOG_PATH). Ensure www-data can create/write it
+   (mkdir -p …/data && chown -R www-data:www-data …/data). Avoid LOG_LEVEL=error if you want
+   request lines in that file.
 
 11) First deploy
    Push to main after secrets are set; CI uploads dist + API binary and runs rsync + systemctl restart.

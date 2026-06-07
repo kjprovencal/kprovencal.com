@@ -25,9 +25,9 @@ Optional variables are documented inline in `env.example` (`LISTEN_ADDR`, `BADGE
 
 ## Logging
 
-The server logs to **stderr** with `log/slog` (text format). On the droplet, systemd stores that in the journal: `journalctl -u personal-site-api -f`. Set **`LOG_PATH`** to also append the same lines to a file (e.g. `data/api.log`); that file powers the **Admin → Logs** tab via **`GET /admin/logs`**.
+The server logs to **stderr** with `log/slog` (text format). On the droplet, systemd stores that in the journal: `journalctl -u personal-site-api -f`. **`LOG_PATH`** defaults to `api.log` beside **`BADGER_PATH`** (e.g. `/var/www/kprovencal/data/api.log`). The same stream is written to stderr (journal) and that file; it powers **Admin → Logs** via **`GET /admin/logs`**.
 
-Every HTTP request logs method, path, status, duration, and client address (using the first `X-Forwarded-For` hop when present). Set **`LOG_LEVEL=debug`** to include **`requireAdmin`** rejection details; default is **`info`**. Passwords, tokens, and full cookies are never logged.
+Everything at or above **`LOG_LEVEL`** is stored — default **`info`** includes **every HTTP request** (`method`, `path`, `status`, `duration_ms`, `remote_addr`), plus warnings and errors. **`LOG_LEVEL=error`** keeps only errors (no request lines). Set **`LOG_LEVEL=debug`** for extra auth detail. Passwords, tokens, and full cookies are never logged.
 
 ## Rate limiting
 
@@ -98,7 +98,7 @@ On **push to `main`**, after tests pass, the **`deploy`** job rsyncs **`dist/`**
 | `GET`  | `/admin/session`       | `{ "authenticated": true }` if cookie valid                            |
 | `GET`  | `/admin/contacts`      | JSON list (authenticated)                                              |
 | `GET`  | `/admin/rsvps`         | JSON list of RSVPs (authenticated)                                    |
-| `GET`  | `/admin/logs`          | Tail of `LOG_PATH` file (authenticated; `?limit=` up to 500)          |
+| `GET`  | `/admin/logs`          | Tail or time range of `LOG_PATH` (authenticated). Query: `limit` (max 500), `since`, `until` (RFC3339 or `YYYY-MM-DD`; date-only `until` is end of that UTC day). Response includes `matched`, `truncated` when the file exceeds the scan window. |
 | `GET`  | `/admin/events`        | JSON list (authenticated)                                              |
 | `POST` | `/admin/events`        | Create event (form body; authenticated)                                |
 
