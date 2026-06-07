@@ -43,8 +43,13 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
    systemctl enable --now personal-site-api
 
 5) nginx
+   Rate limits (recommended): copy deploy/nginx-http-rate-limits.conf.example to e.g.
+     /etc/nginx/conf.d/personal-site-rate-limits.conf
+   and ensure /etc/nginx/nginx.conf includes conf.d/*.conf inside http { }.
    Copy deploy/nginx-site.conf.example, set server_name and paths, then:
    nginx -t && systemctl reload nginx
+   Limits: ~15 GET/s per IP for static/SPA (burst 40), ~8/s for /api and admin API (burst 24).
+   Over-limit clients receive HTTP 429 from nginx before the Go process.
 
 6) TLS (Let’s Encrypt)
    certbot --nginx -d your.domain.example

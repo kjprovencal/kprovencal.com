@@ -6,7 +6,7 @@ import (
 
 func TestLoginAttemptLimiter_AllowsUpToMax(t *testing.T) {
 	t.Parallel()
-	l := newLoginAttemptLimiter()
+	l := newSlidingWindowLimiter(loginRateWindow, loginRateMax)
 	const ip = "192.0.2.1"
 	for i := 0; i < loginRateMax; i++ {
 		if !l.allow(ip) {
@@ -20,7 +20,7 @@ func TestLoginAttemptLimiter_AllowsUpToMax(t *testing.T) {
 
 func TestLoginAttemptLimiter_TracksKeysIndependently(t *testing.T) {
 	t.Parallel()
-	l := newLoginAttemptLimiter()
+	l := newSlidingWindowLimiter(loginRateWindow, loginRateMax)
 	for i := 0; i < loginRateMax; i++ {
 		if !l.allow("192.0.2.1") {
 			t.Fatal("unexpected block for first IP")

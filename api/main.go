@@ -11,6 +11,7 @@ import (
 
 func main() {
 	initLogging()
+	initRateLimits()
 
 	addr := strings.TrimSpace(os.Getenv("LISTEN_ADDR"))
 	if addr == "" {
@@ -56,7 +57,7 @@ func main() {
 		"badger_path", dbPath,
 		"cors_enabled", cors != "",
 	)
-	handler := withRequestLogging(mux)
+	handler := withRequestLogging(withRateLimit(mux))
 	if err := http.ListenAndServe(addr, handler); err != nil {
 		slog.Error("server exit", "err", err)
 		log.Fatal(err)

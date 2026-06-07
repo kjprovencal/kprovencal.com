@@ -29,6 +29,12 @@ The server logs to **stderr** with `log/slog` (text format). On the droplet, sys
 
 Every HTTP request logs method, path, status, duration, and client address (using the first `X-Forwarded-For` hop when present). Set **`LOG_LEVEL=debug`** to include **`requireAdmin`** rejection details; default is **`info`**. Passwords, tokens, and full cookies are never logged.
 
+## Rate limiting
+
+**Nginx (production):** `deploy/nginx-http-rate-limits.conf.example` defines per-IP `limit_req` zones; `deploy/nginx-site.conf.example` applies them to static files, the SPA, `/api`, and admin API paths. This is the main defense against bots probing random URLs.
+
+**Go API:** A per-IP sliding window limits **GET/HEAD** (default 300/min) and **POST** (default 60/min), keyed off `requestRemoteAddr` (honours **`TRUST_PROXY=1`**). **`GET /healthz`** and **`OPTIONS`** are exempt. Tune with **`RATE_LIMIT_GET_MAX`**, **`RATE_LIMIT_POST_MAX`**, or set **`RATE_LIMIT_DISABLED=1`** for local dev. **`POST /admin/login`** has a separate tighter cap (30/min).
+
 ## Run
 
 Copy `env.example` to **`.env`** in this directory (gitignored), set `SESSION_SECRET` and `ADMIN_PASSWORD_BCRYPT`, then:
@@ -92,6 +98,7 @@ On **push to `main`**, after tests pass, the **`deploy`** job rsyncs **`dist/`**
 | `GET`  | `/admin/session`       | `{ "authenticated": true }` if cookie valid                            |
 | `GET`  | `/admin/contacts`      | JSON list (authenticated)                                              |
 | `GET`  | `/admin/rsvps`         | JSON list of RSVPs (authenticated)                                    |
+| `GET`  | `/admin/logs`          | Tail of `LOG_PATH` file (authenticated; `?limit=` up to 500)          |
 | `GET`  | `/admin/events`        | JSON list (authenticated)                                              |
 | `POST` | `/admin/events`        | Create event (form body; authenticated)                                |
 
