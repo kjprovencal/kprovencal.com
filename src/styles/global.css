@@ -735,3 +735,56 @@ label:has(+ input:required):after {
   color: var(--text-muted);
   margin: 0;
 }
+
+.admin-logs-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.admin-logs-refresh {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.admin-logs-refresh:hover {
+  color: var(--text);
+}
+
+.admin-logs-refresh:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+.admin-logs-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 0.65rem;
+}
+
+.admin-logs {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  max-height: min(28rem, 70vh);
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

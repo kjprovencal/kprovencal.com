@@ -21,11 +21,13 @@ Generate the hash:
 go run ./cmd/hashpassword 'your-password'
 ```
 
-Optional variables are documented inline in `env.example` (`LISTEN_ADDR`, `BADGER_PATH`, `CORS_ORIGIN`, `TURNSTILE_SECRET_KEY`, `TRUST_PROXY`, `APP_ENV`, `ADMIN_SESSION_HOURS`, `LOG_LEVEL`).
+Optional variables are documented inline in `env.example` (`LISTEN_ADDR`, `BADGER_PATH`, `CORS_ORIGIN`, `TURNSTILE_SECRET_KEY`, `TRUST_PROXY`, `APP_ENV`, `ADMIN_SESSION_HOURS`, `LOG_LEVEL`, `LOG_PATH`).
 
 ## Logging
 
-The server logs to **stderr** with `log/slog` (text format). Every HTTP request logs method, path, status, duration, and client address (using the first `X-Forwarded-For` hop when present). Set **`LOG_LEVEL=debug`** to include **`requireAdmin`** rejection details; default is **`info`**. Passwords, tokens, and full cookies are never logged.
+The server logs to **stderr** with `log/slog` (text format). On the droplet, systemd stores that in the journal: `journalctl -u personal-site-api -f`. Set **`LOG_PATH`** to also append the same lines to a file (e.g. `data/api.log`); that file powers the **Admin → Logs** tab via **`GET /admin/logs`**.
+
+Every HTTP request logs method, path, status, duration, and client address (using the first `X-Forwarded-For` hop when present). Set **`LOG_LEVEL=debug`** to include **`requireAdmin`** rejection details; default is **`info`**. Passwords, tokens, and full cookies are never logged.
 
 ## Run
 

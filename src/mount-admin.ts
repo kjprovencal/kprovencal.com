@@ -236,10 +236,62 @@ const ADMIN_SHELL = `
 </div>
 `.trim();
 
+type AdminLogsResponse = {
+  enabled: boolean;
+  path?: string;
+  lines?: string[];
+  hint?: string;
+};
+
+async function loadAdminLogs(
+  host: HTMLElement,
+  statusEl: HTMLElement | null
+): Promise<void> {
+  const pre = host.querySelector("#admin-logs-view");
+  const hint = host.querySelector("#admin-logs-hint");
+  if (!(pre instanceof HTMLElement)) return;
+
+  pre.textContent = "Loading…";
+  if (hint instanceof HTMLElement) {
+    hint.hidden = true;
+    hint.textContent = "";
+  }
+
+  try {
+    const res = await adminFetch("/admin/logs?limit=200");
+    if (!res.ok) {
+      pre.textContent = "Could not load logs.";
+      return;
+    }
+    const data = (await res.json()) as AdminLogsResponse;
+    if (!data.enabled) {
+      pre.textContent = "";
+      if (hint instanceof HTMLElement) {
+        hint.textContent =
+          data.hint ??
+          "Server logging to a file is not configured (set LOG_PATH on the API).";
+        hint.hidden = false;
+      }
+      return;
+    }
+    const lines = data.lines ?? [];
+    pre.textContent =
+      lines.length > 0 ? lines.join("\n") : "(No log lines yet.)";
+    if (hint instanceof HTMLElement && data.path) {
+      hint.textContent = `Tail of ${data.path}`;
+      hint.hidden = false;
+    }
+    if (statusEl) statusEl.textContent = "";
+  } catch {
+    pre.textContent = "Network error while loading logs.";
+  }
+}
+
 function buildTabsAndPanels(
   root: HTMLElement,
   specs: AdminTableSpec[],
-  signal: AbortSignal
+  signal: AbortSignal,
+  options?: { includeLogsTab?: boolean }
 ): void {
   const tablist = root.querySelector("#admin-tablist");
   const panelMount = root.querySelector("#admin-panel-mount");
@@ -277,10 +329,84 @@ function buildTabsAndPanels(
     panelMount.appendChild(section);
   });
 
-  setupTabs(root, signal);
+  if (options?.includeLogsTab) {
+    const i = specs.length;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "admin-tab";
+    btn.setAttribute("role", "tab");
+    btn.id = `tab-btn-${i}`;
+    btn.setAttribute("aria-selected", "false");
+    btn.setAttribute("aria-controls", `tab-panel-${i}`);
+    btn.dataset.tab = String(i);
+    btn.textContent = "Logs";
+    tablist.appendChild(btn);
+
+    const section = document.createElement("section");
+    section.id = `tab-panel-${i}`;
+    section.className = "admin-tab-panel";
+    section.setAttribute("role", "tabpanel");
+    section.setAttribute("aria-labelledby", `tab-btn-${i}`);
+    section.setAttribute("data-admin-logs-panel", "");
+    section.hidden = true;
+
+    const toolbar = document.createElement("div");
+    toolbar.className = "admin-logs-toolbar";
+
+    const refresh = document.createElement("button");
+    refresh.type = "button";
+    refresh.id = "admin-logs-refresh";
+    refresh.className = "admin-logs-refresh";
+    refresh.textContent = "Refresh";
+    toolbar.appendChild(refresh);
+
+    const hint = document.createElement("p");
+    hint.id = "admin-logs-hint";
+    hint.className = "admin-logs-hint";
+    hint.hidden = true;
+
+    const pre = document.createElement("pre");
+    pre.id = "admin-logs-view";
+    pre.className = "admin-logs";
+
+    section.appendChild(toolbar);
+    section.appendChild(hint);
+    section.appendChild(pre);
+    panelMount.appendChild(section);
+
+    refresh.addEventListener(
+      "click",
+      () => {
+        const statusEl = host.querySelector("#admin-status");
+        void loadAdminLogs(
+          host,
+          statusEl instanceof HTMLElement ? statusEl : null
+        );
+      },
+      { signal }
+    );
+  }
+
+  const statusEl = root.querySelector("#admin-status");
+  setupTabs(
+    root,
+    signal,
+    (panel) => {
+      if (panel.hasAttribute("data-admin-logs-panel")) {
+        void loadAdminLogs(
+          root,
+          statusEl instanceof HTMLElement ? statusEl : null
+        );
+      }
+    }
+  );
 }
 
-function setupTabs(host: HTMLElement, signal: AbortSignal): void {
+function setupTabs(
+  host: HTMLElement,
+  signal: AbortSignal,
+  onTabShown?: (panel: HTMLElement) => void
+): void {
   host.querySelectorAll<HTMLButtonElement>("#admin-tablist .admin-tab").forEach((btn) => {
     btn.addEventListener(
       "click",
@@ -298,6 +424,7 @@ function setupTabs(host: HTMLElement, signal: AbortSignal): void {
           const on = panel.id === `tab-panel-${idx}`;
           panel.classList.toggle("admin-tab-panel--active", on);
           panel.toggleAttribute("hidden", !on);
+          if (on) onTabShown?.(panel);
         });
       },
       { signal }
@@ -322,7 +449,7 @@ export function mountAdmin(): () => void {
   const adminStatus = adminRoot.querySelector("#admin-status");
 
   if (specs && specs.length > 0) {
-    buildTabsAndPanels(adminRoot, specs, signal);
+    buildTabsAndPanels(adminRoot, specs, signal, { includeLogsTab: true });
   } else if (adminStatus) {
     adminStatus.textContent =
       "Add one or more @table blocks to content/admin.md (see docs/form-markdown.md).";

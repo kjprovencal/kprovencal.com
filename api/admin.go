@@ -16,8 +16,6 @@ import (
 
 var slugRe = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
-var loginLimiter = newLoginAttemptLimiter()
-
 const (
 	maxAdminFormBodyBytes = 32 << 10 // 32 KiB for application/x-www-form-urlencoded
 	maxSlugLen            = 64
@@ -59,6 +57,7 @@ func registerAdminPreflightRoutes(mux *http.ServeMux, corsAllow string) {
 		"/admin/session",
 		"/admin/contacts",
 		"/admin/rsvps",
+		"/admin/logs",
 		"/admin/events",
 	}
 	for _, p := range paths {
@@ -127,6 +126,28 @@ func mountAdminRoutes(mux *http.ServeMux, db *badger.DB, sessionSecret []byte, p
 			return
 		}
 		writeJSON(w, http.StatusOK, rows)
+	}))))
+
+	mux.Handle("GET /admin/logs", withAdminCORS(corsAllow, requireAdmin(sessionSecret, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if apiLogPath == "" {
+			writeJSON(w, http.StatusOK, map[string]any{
+				"enabled": false,
+				"hint":    "Set LOG_PATH in the API environment (e.g. /var/www/kprovencal/data/api.log) and restart the service.",
+			})
+			return
+		}
+		limit := parseLimit(r.URL.Query().Get("limit"), defaultLogTailLines, maxLogTailLines)
+		lines, err := tailLogFile(apiLogPath, limit, defaultLogTailReadBytes)
+		if err != nil {
+			slog.ErrorContext(r.Context(), "admin read logs", "err", err, "path", apiLogPath)
+			writeJSON(w, http.StatusInternalServerError, errResp{"could not read log file"})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"enabled": true,
+			"path":    apiLogPath,
+			"lines":   lines,
+		})
 	}))))
 
 	mux.Handle("GET /admin/events", withAdminCORS(corsAllow, requireAdmin(sessionSecret, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

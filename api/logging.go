@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -8,7 +9,11 @@ import (
 	"time"
 )
 
+// apiLogPath is set when LOG_PATH is configured (used by GET /admin/logs).
+var apiLogPath string
+
 // initLogging configures the default slog logger. LOG_LEVEL: debug, info (default), warn, error.
+// When LOG_PATH is set, logs are appended to that file as well as stderr (systemd journal).
 func initLogging() {
 	level := slog.LevelInfo
 	switch strings.ToLower(strings.TrimSpace(os.Getenv("LOG_LEVEL"))) {
@@ -19,7 +24,22 @@ func initLogging() {
 	case "error":
 		level = slog.LevelError
 	}
-	h := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})
+
+	out := io.Writer(os.Stderr)
+	logPath := strings.TrimSpace(os.Getenv("LOG_PATH"))
+	if logPath != "" {
+		f, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o640)
+		if err != nil {
+			h := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})
+			slog.SetDefault(slog.New(h))
+			slog.Error("cannot open LOG_PATH; logging to stderr only", "path", logPath, "err", err)
+			return
+		}
+		apiLogPath = logPath
+		out = io.MultiWriter(os.Stderr, f)
+	}
+
+	h := slog.NewTextHandler(out, &slog.HandlerOptions{Level: level})
 	slog.SetDefault(slog.New(h))
 }
 
