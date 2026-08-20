@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	ErrEventExists = errors.New("event already exists")
+	ErrEventExists  = errors.New("event already exists")
+	ErrRSVPNotFound = errors.New("rsvp not found")
 )
 
 func openDB(path string) (*badger.DB, error) {
@@ -238,6 +239,69 @@ func insertWeddingRSVP(
 	}
 	return db.Update(func(tx *badger.Txn) error {
 		return tx.Set(key, blob)
+	})
+}
+
+func findRSVPInTxn(tx *badger.Txn, id string) (key []byte, st rsvpStored, err error) {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return nil, rsvpStored{}, ErrRSVPNotFound
+	}
+	prefix := []byte("rsvp/")
+	itOpts := badger.DefaultIteratorOptions
+	itOpts.Prefix = prefix
+	itOpts.PrefetchValues = true
+
+	iter := tx.NewIterator(itOpts)
+	defer iter.Close()
+
+	for iter.Rewind(); iter.Valid(); iter.Next() {
+		item := iter.Item()
+		var cur rsvpStored
+		if err := item.Value(func(val []byte) error {
+			return json.Unmarshal(val, &cur)
+		}); err != nil {
+			return nil, rsvpStored{}, err
+		}
+		if cur.ID == id {
+			return append([]byte(nil), item.Key()...), cur, nil
+		}
+	}
+	return nil, rsvpStored{}, ErrRSVPNotFound
+}
+
+func updateWeddingRSVP(
+	db *badger.DB,
+	id, name, email string,
+	guestCount int,
+	meals []string,
+	notes string,
+) error {
+	return db.Update(func(tx *badger.Txn) error {
+		key, st, err := findRSVPInTxn(tx, id)
+		if err != nil {
+			return err
+		}
+		st.Name = name
+		st.Email = email
+		st.GuestCount = guestCount
+		st.Meals = meals
+		st.Notes = notes
+		blob, err := json.Marshal(st)
+		if err != nil {
+			return err
+		}
+		return tx.Set(key, blob)
+	})
+}
+
+func deleteWeddingRSVP(db *badger.DB, id string) error {
+	return db.Update(func(tx *badger.Txn) error {
+		key, _, err := findRSVPInTxn(tx, id)
+		if err != nil {
+			return err
+		}
+		return tx.Delete(key)
 	})
 }
 

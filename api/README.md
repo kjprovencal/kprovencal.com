@@ -102,6 +102,8 @@ On **push to `main`**, after tests pass, the **`deploy`** job rsyncs **`dist/`**
 | `GET`  | `/admin/session`       | `{ "authenticated": true }` if cookie valid                            |
 | `GET`  | `/admin/contacts`      | JSON list (authenticated)                                              |
 | `GET`  | `/admin/rsvps`         | JSON list of RSVPs (authenticated)                                    |
+| `PATCH`| `/admin/rsvps/{id}`    | Update an RSVP (JSON body; authenticated)                             |
+| `DELETE`| `/admin/rsvps/{id}`   | Delete an RSVP (authenticated)                                        |
 | `GET`  | `/admin/logs`          | Tail or time range of `LOG_PATH` (authenticated). Query: `limit` (max 500), `since`, `until` (RFC3339 or `YYYY-MM-DD`; date-only `until` is end of that UTC day). Response includes `matched`, `truncated` when the file exceeds the scan window. |
 | `GET`  | `/admin/client-errors` | JSON list of frontend errors (authenticated)                           |
 | `GET`  | `/admin/rsvp-abandons` | JSON list of incomplete RSVP form sessions (authenticated)             |
@@ -116,7 +118,7 @@ The site is a single **`index.html`** SPA using **path-based** client routing (`
 
 When the HTML is served from a **different origin** than the API, set **`CORS_ORIGIN`** to that HTML origin and **`VITE_PUBLIC_API_URL`** on the static build to your API URL. With **`APP_ENV=production`**, session cookies use **`SameSite=None`** and **`Secure`** so the browser can send them on cross-site requests to the API host.
 
-Authenticated list endpoints return JSON with **snake_case** field names (`created_at`, `guest_count`, etc.).
+Authenticated list endpoints return JSON with **snake_case** field names (`created_at`, `guest_count`, etc.). The RSVPs tab supports **Edit** / **Remove** via **`PATCH`** / **`DELETE` `/admin/rsvps/{id}`**.
 
 ## CORS
 

@@ -93,6 +93,60 @@ func normalizeWeddingMealLines(meals []string) ([]string, error) {
 	return normalized, nil
 }
 
+var (
+	errGuestCountNegative = errors.New("guest count cannot be negative")
+	errGuestCountTooHigh  = errors.New("guest count cannot exceed 8")
+	errNameEmailRequired  = errors.New("name and email are required")
+	errFieldTooLong       = errors.New("field too long")
+	errMealCountMismatch  = errors.New("meal choices must match the number of guests")
+	errInvalidMeals       = errors.New("invalid meal choices")
+)
+
+type weddingRSVPFields struct {
+	Name       string
+	Email      string
+	GuestCount int
+	Meals      []string
+	Notes      string
+}
+
+// normalizeWeddingRSVPInput validates and normalizes RSVP fields shared by public create and admin update.
+func normalizeWeddingRSVPInput(name, email, notes string, guests int, meals []string) (weddingRSVPFields, error) {
+	name = strings.TrimSpace(name)
+	email = strings.TrimSpace(email)
+	notes = strings.TrimSpace(notes)
+
+	if guests < 0 {
+		return weddingRSVPFields{}, errGuestCountNegative
+	}
+	if guests > maxWeddingMealLines {
+		return weddingRSVPFields{}, errGuestCountTooHigh
+	}
+	if name == "" || email == "" {
+		return weddingRSVPFields{}, errNameEmailRequired
+	}
+	if utf8.RuneCountInString(name) > maxNameLen || utf8.RuneCountInString(email) > maxEmailLen || utf8.RuneCountInString(notes) > maxNotesLen {
+		return weddingRSVPFields{}, errFieldTooLong
+	}
+	if meals == nil {
+		meals = []string{}
+	}
+	if len(meals) != guests {
+		return weddingRSVPFields{}, errMealCountMismatch
+	}
+	normalized, err := normalizeWeddingMealLines(meals)
+	if err != nil {
+		return weddingRSVPFields{}, errInvalidMeals
+	}
+	return weddingRSVPFields{
+		Name:       name,
+		Email:      email,
+		GuestCount: guests,
+		Meals:      normalized,
+		Notes:      notes,
+	}, nil
+}
+
 func corsHeaders(w http.ResponseWriter, corsAllow string, methods []string) {
 	if corsAllow == "" {
 		return
@@ -219,39 +273,24 @@ func handleRSVP(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 		return
 	}
 
-	name := strings.TrimSpace(in.Name)
-	email := strings.TrimSpace(in.Email)
-	notes := strings.TrimSpace(in.Notes)
-	guests := in.GuestCount
-
-	if guests < 0 {
-		writePlainError(w, http.StatusBadRequest, "How did you get a negative number of guests?")
-		return
-	}
-	if guests > maxWeddingMealLines {
-		writePlainError(w, http.StatusBadRequest, "Guest count cannot exceed 8.")
-		return
-	}
-	if name == "" || email == "" {
-		writePlainError(w, http.StatusBadRequest, "Name and email are required.")
-		return
-	}
-	if utf8.RuneCountInString(name) > maxNameLen || utf8.RuneCountInString(email) > maxEmailLen || utf8.RuneCountInString(notes) > maxNotesLen {
-		writePlainError(w, http.StatusBadRequest, "A field is too long.")
-		return
-	}
-
-	meals := in.Meals
-	if meals == nil {
-		meals = []string{}
-	}
-	if len(meals) != guests {
-		writePlainError(w, http.StatusBadRequest, "Meal choices must match the number of guests.")
-		return
-	}
-	normalized, err := normalizeWeddingMealLines(meals)
+	fields, err := normalizeWeddingRSVPInput(in.Name, in.Email, in.Notes, in.GuestCount, in.Meals)
 	if err != nil {
-		writePlainError(w, http.StatusBadRequest, "Invalid meal choices.")
+		switch {
+		case errors.Is(err, errGuestCountNegative):
+			writePlainError(w, http.StatusBadRequest, "How did you get a negative number of guests?")
+		case errors.Is(err, errGuestCountTooHigh):
+			writePlainError(w, http.StatusBadRequest, "Guest count cannot exceed 8.")
+		case errors.Is(err, errNameEmailRequired):
+			writePlainError(w, http.StatusBadRequest, "Name and email are required.")
+		case errors.Is(err, errFieldTooLong):
+			writePlainError(w, http.StatusBadRequest, "A field is too long.")
+		case errors.Is(err, errMealCountMismatch):
+			writePlainError(w, http.StatusBadRequest, "Meal choices must match the number of guests.")
+		case errors.Is(err, errInvalidMeals):
+			writePlainError(w, http.StatusBadRequest, "Invalid meal choices.")
+		default:
+			writePlainError(w, http.StatusBadRequest, "Invalid RSVP.")
+		}
 		return
 	}
 
@@ -268,7 +307,7 @@ func handleRSVP(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 		}
 	}
 
-	if err := insertWeddingRSVP(db, name, email, guests, normalized, notes); err != nil {
+	if err := insertWeddingRSVP(db, fields.Name, fields.Email, fields.GuestCount, fields.Meals, fields.Notes); err != nil {
 		slog.ErrorContext(r.Context(), "insert wedding rsvp", "err", err)
 		writePlainError(w, http.StatusInternalServerError, "Could not save your RSVP. Please try again later.")
 		return

@@ -1,5 +1,5 @@
 import { publicApiUrl } from "./api-base";
-import { escapeHtml } from "./html-escape";
+import { escapeAttr, escapeHtml } from "./html-escape";
 import {
   MD_TABLE_ATTR,
   MD_TABLE_CLASS,
@@ -59,6 +59,13 @@ type ListHandler = {
   render: (data: unknown, colspan: number) => string;
 };
 
+/** Must stay in sync with `allowedWeddingMealLabels` in `api/public.go`. */
+const RSVP_MEAL_LABELS = [
+  "Chicken Alfredo",
+  "Scampi",
+  "Verdura al Napoleon",
+] as const;
+
 function adminFetch(path: string, init?: RequestInit): Promise<Response> {
   return fetch(publicApiUrl(path), {
     ...init,
@@ -98,20 +105,27 @@ function weddingRowsHtml(rows: WeddingRSVP[], colspan: number): string {
   return rows
     .map(
       (r) =>
-        `<tr><td>${escapeHtml(formatWhen(r.created_at))}</td><td>${escapeHtml(
-          r.name
-        )}</td><td>${escapeHtml(r.email)}</td><td>${
-          r.guest_count
-        }</td><td>${mealListHtml(
+        `<tr data-rsvp-id="${escapeAttr(r.id)}"><td>${escapeHtml(
+          formatWhen(r.created_at)
+        )}</td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(
+          r.email
+        )}</td><td>${r.guest_count}</td><td>${mealListHtml(
           r.meals ?? []
         )}</td><td class="admin-cell-notes">${escapeHtml(
           r.notes || "—"
-        )}</td></tr>`
+        )}</td><td class="admin-cell-actions"><button type="button" class="admin-row-action" data-rsvp-action="edit" data-rsvp-id="${escapeAttr(
+          r.id
+        )}">Edit</button> <button type="button" class="admin-row-action admin-row-action--danger" data-rsvp-action="remove" data-rsvp-id="${escapeAttr(
+          r.id
+        )}">Remove</button></td></tr>`
     )
     .join("");
 }
 
 function rsvpAbandonRowsHtml(rows: RsvpAbandonRow[], colspan: number): string {
+  if (!Array.isArray(rows)) {
+    return `<tr><td colspan="${colspan}" class="admin-empty">Invalid response (expected a JSON array).</td></tr>`;
+  }
   if (rows.length === 0) {
     return `<tr><td colspan="${colspan}" class="admin-empty">No incomplete RSVPs yet.</td></tr>`;
   }
@@ -596,9 +610,174 @@ function setupTabs(
   });
 }
 
+function mealLabelFromStoredLine(line: string, guestIndex: number): string {
+  const prefix = `Guest ${guestIndex}: `;
+  if (line.startsWith(prefix)) {
+    return line.slice(prefix.length).trim();
+  }
+  return "";
+}
+
+function mealOptionsHtml(selectedLabel: string): string {
+  const opts = RSVP_MEAL_LABELS.map((label) => {
+    const sel = label === selectedLabel ? " selected" : "";
+    return `<option value="${escapeAttr(label)}"${sel}>${escapeHtml(label)}</option>`;
+  }).join("");
+  return `<option value="" disabled${selectedLabel ? "" : " selected"}>Choose…</option>${opts}`;
+}
+
+function buildMealFieldsHtml(guestCount: number, meals: string[]): string {
+  if (guestCount <= 0) {
+    return `<p class="admin-muted">No meal choices when guest count is 0.</p>`;
+  }
+  const fields: string[] = [];
+  for (let i = 1; i <= guestCount; i++) {
+    const selected = mealLabelFromStoredLine(meals[i - 1] ?? "", i);
+    fields.push(`
+      <label class="admin-edit-form__label">Guest ${i} meal
+        <select name="meal_${i}" class="admin-edit-form__input" required>
+          ${mealOptionsHtml(selected)}
+        </select>
+      </label>`);
+  }
+  return fields.join("");
+}
+
+function ensureRsvpEditDialog(root: HTMLElement): HTMLDialogElement {
+  const existing = root.querySelector("#admin-rsvp-edit");
+  if (existing instanceof HTMLDialogElement) return existing;
+
+  const dialog = document.createElement("dialog");
+  dialog.id = "admin-rsvp-edit";
+  dialog.className = "admin-edit-dialog";
+  dialog.innerHTML = `
+    <form method="dialog" id="admin-rsvp-edit-form" class="admin-edit-form">
+      <h2 class="admin-edit-form__title">Edit RSVP</h2>
+      <input type="hidden" name="id" id="admin-rsvp-edit-id" />
+      <label class="admin-edit-form__label">Name
+        <input type="text" name="name" id="admin-rsvp-edit-name" class="admin-edit-form__input" required maxlength="120" />
+      </label>
+      <label class="admin-edit-form__label">Email
+        <input type="email" name="email" id="admin-rsvp-edit-email" class="admin-edit-form__input" required maxlength="254" />
+      </label>
+      <label class="admin-edit-form__label">Guests
+        <input type="number" name="guest_count" id="admin-rsvp-edit-guests" class="admin-edit-form__input" required min="0" max="8" />
+      </label>
+      <div id="admin-rsvp-edit-meals" class="admin-edit-form__meals"></div>
+      <label class="admin-edit-form__label">Notes
+        <textarea name="notes" id="admin-rsvp-edit-notes" class="admin-edit-form__input admin-edit-form__textarea" maxlength="2000" rows="3"></textarea>
+      </label>
+      <p id="admin-rsvp-edit-error" class="admin-error" role="alert" hidden></p>
+      <div class="admin-edit-form__actions">
+        <button type="submit" value="save" class="admin-edit-form__save">Save</button>
+        <button type="submit" value="cancel" class="admin-edit-form__cancel" formnovalidate>Cancel</button>
+      </div>
+    </form>
+  `;
+  root.appendChild(dialog);
+  return dialog;
+}
+
+function openRsvpEditDialog(
+  root: HTMLElement,
+  row: WeddingRSVP,
+  signal: AbortSignal
+): Promise<WeddingRSVP | null> {
+  const dialog = ensureRsvpEditDialog(root);
+  const form = dialog.querySelector("#admin-rsvp-edit-form");
+  const idInput = dialog.querySelector("#admin-rsvp-edit-id");
+  const nameInput = dialog.querySelector("#admin-rsvp-edit-name");
+  const emailInput = dialog.querySelector("#admin-rsvp-edit-email");
+  const guestsInput = dialog.querySelector("#admin-rsvp-edit-guests");
+  const notesInput = dialog.querySelector("#admin-rsvp-edit-notes");
+  const mealsMount = dialog.querySelector("#admin-rsvp-edit-meals");
+  const errorEl = dialog.querySelector("#admin-rsvp-edit-error");
+
+  if (
+    !(form instanceof HTMLFormElement) ||
+    !(idInput instanceof HTMLInputElement) ||
+    !(nameInput instanceof HTMLInputElement) ||
+    !(emailInput instanceof HTMLInputElement) ||
+    !(guestsInput instanceof HTMLInputElement) ||
+    !(notesInput instanceof HTMLTextAreaElement) ||
+    !(mealsMount instanceof HTMLElement) ||
+    !(errorEl instanceof HTMLElement)
+  ) {
+    return Promise.resolve(null);
+  }
+
+  idInput.value = row.id;
+  nameInput.value = row.name;
+  emailInput.value = row.email;
+  guestsInput.value = String(row.guest_count);
+  notesInput.value = row.notes ?? "";
+  mealsMount.innerHTML = buildMealFieldsHtml(row.guest_count, row.meals ?? []);
+  errorEl.hidden = true;
+  errorEl.textContent = "";
+
+  const refreshMeals = () => {
+    const n = Number(guestsInput.value);
+    const guestCount = Number.isFinite(n) ? Math.max(0, Math.min(8, Math.trunc(n))) : 0;
+    const prevMeals: string[] = [];
+    for (let i = 1; i <= 8; i++) {
+      const sel = form.querySelector(`select[name="meal_${i}"]`);
+      if (sel instanceof HTMLSelectElement && sel.value) {
+        prevMeals.push(`Guest ${i}: ${sel.value}`);
+      }
+    }
+    mealsMount.innerHTML = buildMealFieldsHtml(guestCount, prevMeals);
+  };
+
+  return new Promise((resolve) => {
+    const onGuestChange = () => refreshMeals();
+    guestsInput.addEventListener("change", onGuestChange, { signal });
+    guestsInput.addEventListener("input", onGuestChange, { signal });
+
+    const finish = (value: WeddingRSVP | null) => {
+      dialog.removeEventListener("close", onClose);
+      resolve(value);
+    };
+
+    const onClose = () => {
+      if (dialog.returnValue !== "save") {
+        finish(null);
+        return;
+      }
+      const guests = Number(guestsInput.value);
+      const guestCount = Number.isFinite(guests)
+        ? Math.max(0, Math.min(8, Math.trunc(guests)))
+        : 0;
+      const meals: string[] = [];
+      for (let i = 1; i <= guestCount; i++) {
+        const sel = form.querySelector(`select[name="meal_${i}"]`);
+        if (!(sel instanceof HTMLSelectElement) || !sel.value) {
+          errorEl.textContent = `Choose a meal for guest ${i}.`;
+          errorEl.hidden = false;
+          dialog.showModal();
+          return;
+        }
+        meals.push(`Guest ${i}: ${sel.value}`);
+      }
+      finish({
+        id: idInput.value,
+        created_at: row.created_at,
+        name: nameInput.value.trim(),
+        email: emailInput.value.trim(),
+        guest_count: guestCount,
+        meals,
+        notes: notesInput.value.trim(),
+      });
+    };
+
+    dialog.addEventListener("close", onClose, { signal });
+    if (!dialog.open) dialog.showModal();
+  });
+}
+
 export function mountAdmin(): () => void {
-  const adminRoot = document.getElementById("admin-app");
-  if (!(adminRoot instanceof HTMLElement)) return () => {};
+  const adminApp = document.getElementById("admin-app");
+  if (!(adminApp instanceof HTMLElement)) return () => {};
+  const adminRoot: HTMLElement = adminApp;
 
   const specs = collectAdminTables();
 
@@ -611,6 +790,8 @@ export function mountAdmin(): () => void {
   const loginForm = adminRoot.querySelector("#login-form") as HTMLFormElement | null;
   const loginError = adminRoot.querySelector("#login-error") as HTMLElement | null;
   const adminStatus = adminRoot.querySelector("#admin-status");
+
+  const rsvpById = new Map<string, WeddingRSVP>();
 
   if (specs && specs.length > 0) {
     buildTabsAndPanels(adminRoot, specs, signal, { includeLogsTab: true });
@@ -661,43 +842,187 @@ export function mountAdmin(): () => void {
 
     try {
       const handlers = slugList.map((slug) => resolveListHandler(slug));
-      const responses = await Promise.all(
-        handlers.map((h) => adminFetch(h.path))
+      const outcomes = await Promise.all(
+        [...wraps].map(async (wrap, i) => {
+          const slug = slugList[i];
+          const handler = handlers[i];
+          const table = wrap.querySelector("table");
+          const colspan = table ? theadColCount(table) : 1;
+          try {
+            const res = await adminFetch(handler.path);
+            if (res.status === 401) {
+              return { kind: "unauthorized" as const };
+            }
+            if (!res.ok) {
+              return {
+                kind: "error" as const,
+                wrap,
+                colspan,
+                message: `Could not load ${slug} (HTTP ${res.status}).`,
+              };
+            }
+            let data: unknown;
+            try {
+              data = await res.json();
+            } catch {
+              return {
+                kind: "error" as const,
+                wrap,
+                colspan,
+                message: `Could not load ${slug} (invalid JSON — is this admin API path proxied to Go?).`,
+              };
+            }
+            return { kind: "ok" as const, wrap, handler, colspan, data, slug };
+          } catch {
+            return {
+              kind: "error" as const,
+              wrap,
+              colspan,
+              message: `Could not load ${slug} (network error).`,
+            };
+          }
+        })
       );
 
       if (signal.aborted) return;
 
-      if (responses.some((r) => r.status === 401)) {
+      if (outcomes.some((o: (typeof outcomes)[number]) => o.kind === "unauthorized")) {
         showLogin();
         adminStatus.textContent = "";
         return;
       }
 
-      const failed = responses.filter((r) => !r.ok);
-      if (failed.length > 0) {
-        adminStatus.textContent = "Could not load one or more lists.";
-        return;
+      let failed = 0;
+      for (const outcome of outcomes) {
+        if (outcome.kind === "error") {
+          failed++;
+          const tbody = tbodyInWrap(outcome.wrap);
+          if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="${outcome.colspan}" class="admin-empty">${escapeHtml(
+              outcome.message
+            )}</td></tr>`;
+          }
+          continue;
+        }
+        if (outcome.kind !== "ok") continue;
+        const table = outcome.wrap.querySelector("table");
+        if (!table) continue;
+        const tbody = ensureTbody(table);
+        tbody.innerHTML = outcome.handler.render(outcome.data, outcome.colspan);
+
+        const listKey =
+          SLUG_ALIASES[outcome.slug] ?? outcome.slug;
+        if (listKey === "rsvps" && Array.isArray(outcome.data)) {
+          rsvpById.clear();
+          for (const row of outcome.data as WeddingRSVP[]) {
+            if (row && typeof row.id === "string") {
+              rsvpById.set(row.id, row);
+            }
+          }
+        }
       }
 
-      const payloads = await Promise.all(responses.map((r) => r.json()));
-
-      wraps.forEach((wrap, i) => {
-        const slug = slugList[i];
-        const handler = handlers[i];
-        const table = wrap.querySelector("table");
-        if (!table) return;
-        const tbody = ensureTbody(table);
-        const colspan = theadColCount(table);
-        tbody.innerHTML = handler.render(payloads[i], colspan);
-      });
-
-      adminStatus.textContent = "";
+      adminStatus.textContent =
+        failed > 0 ? "Some lists could not be loaded." : "";
     } catch {
       if (!signal.aborted) {
-        adminStatus.textContent = "Network error while loading submissions.";
+        adminStatus.textContent = "Unexpected error while loading submissions.";
       }
     }
   }
+
+  async function removeRsvp(id: string): Promise<void> {
+    const row = rsvpById.get(id);
+    const label = row?.name ? `RSVP for ${row.name}` : "this RSVP";
+    if (!window.confirm(`Remove ${label}? This cannot be undone.`)) return;
+
+    if (adminStatus) adminStatus.textContent = "Removing…";
+    try {
+      const res = await adminFetch(`/admin/rsvps/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (signal.aborted) return;
+      if (res.status === 401) {
+        showLogin();
+        return;
+      }
+      if (!res.ok) {
+        if (adminStatus) {
+          adminStatus.textContent = `Could not remove RSVP (HTTP ${res.status}).`;
+        }
+        return;
+      }
+      await loadSubmissions();
+    } catch {
+      if (!signal.aborted && adminStatus) {
+        adminStatus.textContent = "Network error while removing RSVP.";
+      }
+    }
+  }
+
+  async function editRsvp(id: string): Promise<void> {
+    const existing = rsvpById.get(id);
+    if (!existing) {
+      if (adminStatus) adminStatus.textContent = "RSVP not found in the current list.";
+      return;
+    }
+    const edited = await openRsvpEditDialog(adminRoot, existing, signal);
+    if (!edited || signal.aborted) return;
+
+    if (adminStatus) adminStatus.textContent = "Saving…";
+    try {
+      const res = await adminFetch(`/admin/rsvps/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: edited.name,
+          email: edited.email,
+          guest_count: edited.guest_count,
+          meals: edited.meals,
+          notes: edited.notes,
+        }),
+      });
+      if (signal.aborted) return;
+      if (res.status === 401) {
+        showLogin();
+        return;
+      }
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        if (adminStatus) {
+          adminStatus.textContent =
+            data?.error ?? `Could not save RSVP (HTTP ${res.status}).`;
+        }
+        return;
+      }
+      await loadSubmissions();
+    } catch {
+      if (!signal.aborted && adminStatus) {
+        adminStatus.textContent = "Network error while saving RSVP.";
+      }
+    }
+  }
+
+  adminRoot.addEventListener(
+    "click",
+    (e) => {
+      const t = e.target;
+      if (!(t instanceof Element)) return;
+      const btn = t.closest<HTMLElement>("[data-rsvp-action]");
+      if (!btn || !adminRoot.contains(btn)) return;
+      const action = btn.dataset.rsvpAction;
+      const id = btn.dataset.rsvpId;
+      if (!id) return;
+      if (action === "remove") {
+        void removeRsvp(id);
+      } else if (action === "edit") {
+        void editRsvp(id);
+      }
+    },
+    { signal }
+  );
 
   loginForm?.addEventListener(
     "submit",

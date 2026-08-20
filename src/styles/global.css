@@ -736,6 +736,150 @@ label:has(+ input:required):after {
   margin: 0;
 }
 
+.admin-cell-actions {
+  white-space: nowrap;
+}
+
+.admin-row-action {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.25rem 0.55rem;
+  margin: 0 0.15rem 0.15rem 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.admin-row-action:hover {
+  color: var(--text);
+}
+
+.admin-row-action:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+.admin-row-action--danger:hover {
+  color: #b42318;
+  border-color: color-mix(in srgb, #b42318 35%, var(--border));
+}
+
+.admin-edit-dialog {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0;
+  max-width: min(26rem, calc(100vw - 2rem));
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 12px 40px color-mix(in srgb, #000 18%, transparent);
+}
+
+.admin-edit-dialog::backdrop {
+  background: color-mix(in srgb, #000 40%, transparent);
+}
+
+.admin-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.15rem 1.25rem 1.25rem;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+}
+
+.admin-edit-form__title {
+  margin: 0 0 0.15rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.admin-edit-form__label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.admin-edit-form__input {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.admin-edit-form__input:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+.admin-edit-form__textarea {
+  resize: vertical;
+  min-height: 4rem;
+}
+
+.admin-edit-form__meals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.admin-edit-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.admin-edit-form__save,
+.admin-edit-form__cancel {
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.admin-edit-form__save {
+  border: 1px solid transparent;
+  background: var(--link);
+  color: #fff;
+}
+
+.admin-edit-form__save:hover {
+  filter: brightness(1.05);
+}
+
+.admin-edit-form__save:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+.admin-edit-form__cancel {
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+}
+
+.admin-edit-form__cancel:hover {
+  color: var(--text);
+}
+
+.admin-edit-form__cancel:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
 .admin-logs-toolbar {
   display: flex;
   flex-wrap: wrap;

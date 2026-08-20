@@ -29,8 +29,8 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Admin API only (not the SPA HTML route — see location / below)
-    location ~ ^/admin/(login|logout|session|contacts|rsvps|logs|client-errors|rsvp-abandons|events) {
+    # Admin API paths (/admin/…); exact GET /admin is served by location / below as SPA HTML.
+    location ~ ^/admin/[a-z0-9] {
         limit_req zone=personal_site_api burst=24 nodelay;
         limit_req_status 429;
 

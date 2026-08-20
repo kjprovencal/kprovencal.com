@@ -35,7 +35,7 @@ func adminPreflight(w http.ResponseWriter, corsAllow string) {
 		return
 	}
 	setAdminCORS(w, corsAllow)
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -57,6 +57,7 @@ func registerAdminPreflightRoutes(mux *http.ServeMux, corsAllow string) {
 		"/admin/session",
 		"/admin/contacts",
 		"/admin/rsvps",
+		"/admin/rsvps/{id}",
 		"/admin/logs",
 		"/admin/client-errors",
 		"/admin/rsvp-abandons",
@@ -128,6 +129,51 @@ func mountAdminRoutes(mux *http.ServeMux, db *badger.DB, sessionSecret []byte, p
 			return
 		}
 		writeJSON(w, http.StatusOK, rows)
+	}))))
+
+	mux.Handle("PATCH /admin/rsvps/{id}", withAdminCORS(corsAllow, requireAdmin(sessionSecret, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := strings.TrimSpace(r.PathValue("id"))
+		if id == "" {
+			writeJSON(w, http.StatusBadRequest, errResp{"missing id"})
+			return
+		}
+		var in rsvpIn
+		if !decodeJSONBody(w, r, &in, false) {
+			return
+		}
+		fields, err := normalizeWeddingRSVPInput(in.Name, in.Email, in.Notes, in.GuestCount, in.Meals)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, errResp{err.Error()})
+			return
+		}
+		if err := updateWeddingRSVP(db, id, fields.Name, fields.Email, fields.GuestCount, fields.Meals, fields.Notes); err != nil {
+			if errors.Is(err, ErrRSVPNotFound) {
+				writeJSON(w, http.StatusNotFound, errResp{"rsvp not found"})
+				return
+			}
+			slog.ErrorContext(r.Context(), "admin update rsvp", "err", err, "id", id)
+			writeJSON(w, http.StatusInternalServerError, errResp{"could not update rsvp"})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+	}))))
+
+	mux.Handle("DELETE /admin/rsvps/{id}", withAdminCORS(corsAllow, requireAdmin(sessionSecret, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := strings.TrimSpace(r.PathValue("id"))
+		if id == "" {
+			writeJSON(w, http.StatusBadRequest, errResp{"missing id"})
+			return
+		}
+		if err := deleteWeddingRSVP(db, id); err != nil {
+			if errors.Is(err, ErrRSVPNotFound) {
+				writeJSON(w, http.StatusNotFound, errResp{"rsvp not found"})
+				return
+			}
+			slog.ErrorContext(r.Context(), "admin delete rsvp", "err", err, "id", id)
+			writeJSON(w, http.StatusInternalServerError, errResp{"could not delete rsvp"})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 	}))))
 
 	mux.Handle("GET /admin/logs", withAdminCORS(corsAllow, requireAdmin(sessionSecret, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

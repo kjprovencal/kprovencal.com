@@ -8,8 +8,8 @@ Use the password configured for this site’s API to sign in. You can review use
 
 @table rsvps RSVPs
 
-| When | Name | Email | Guests | Meals | Notes |
-| ---- | ---- | ----- | ------ | ----- | ----- |
+| When | Name | Email | Guests | Meals | Notes | Actions |
+| ---- | ---- | ----- | ------ | ----- | ----- | ------- |
 
 @table rsvp-abandons Incomplete RSVPs
 
