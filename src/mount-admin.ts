@@ -98,6 +98,102 @@ function mealListHtml(meals: string[]): string {
     .join("")}</ul>`;
 }
 
+type RsvpStats = {
+  submissions: number;
+  guests: number;
+  meals: Map<string, number>;
+};
+
+function parseMealLabelFromLine(line: string): string | null {
+  const idx = line.indexOf(": ");
+  if (idx < 0) return null;
+  const label = line.slice(idx + 2).trim();
+  return label || null;
+}
+
+function computeRsvpStats(rows: WeddingRSVP[]): RsvpStats {
+  const meals = new Map<string, number>();
+  let guests = 0;
+
+  for (const row of rows) {
+    guests += row.guest_count;
+    for (const line of row.meals ?? []) {
+      const label = parseMealLabelFromLine(line);
+      if (!label) continue;
+      meals.set(label, (meals.get(label) ?? 0) + 1);
+    }
+  }
+
+  return { submissions: rows.length, guests, meals };
+}
+
+function sortMealStatEntries(
+  entries: Array<[string, number]>
+): Array<[string, number]> {
+  return entries.sort((a, b) => {
+    const ai = RSVP_MEAL_LABELS.indexOf(
+      a[0] as (typeof RSVP_MEAL_LABELS)[number]
+    );
+    const bi = RSVP_MEAL_LABELS.indexOf(
+      b[0] as (typeof RSVP_MEAL_LABELS)[number]
+    );
+    if (ai >= 0 && bi >= 0) return ai - bi;
+    if (ai >= 0) return -1;
+    if (bi >= 0) return 1;
+    return a[0].localeCompare(b[0]);
+  });
+}
+
+function renderRsvpStatsHtml(stats: RsvpStats): string {
+  const mealEntries = sortMealStatEntries([...stats.meals.entries()]);
+  const mealsHtml =
+    mealEntries.length === 0
+      ? '<p class="admin-rsvp-stats__meals-empty">No meal choices yet.</p>'
+      : `<ul class="admin-rsvp-stats__meals">${mealEntries
+          .map(
+            ([label, count]) =>
+              `<li><span class="admin-rsvp-stats__meal-label">${escapeHtml(
+                label
+              )}</span> <span class="admin-rsvp-stats__meal-count">${count}</span></li>`
+          )
+          .join("")}</ul>`;
+
+  return `
+    <h2 class="admin-rsvp-stats__title">RSVP summary</h2>
+    <dl class="admin-rsvp-stats__grid">
+      <div class="admin-rsvp-stats__item">
+        <dt>Submissions</dt>
+        <dd>${stats.submissions}</dd>
+      </div>
+      <div class="admin-rsvp-stats__item">
+        <dt>Guests</dt>
+        <dd>${stats.guests}</dd>
+      </div>
+    </dl>
+    <div class="admin-rsvp-stats__meals-wrap">
+      <h3 class="admin-rsvp-stats__meals-title">Meals</h3>
+      ${mealsHtml}
+    </div>
+  `.trim();
+}
+
+function setRsvpStatsLoading(el: HTMLElement): void {
+  el.hidden = false;
+  el.innerHTML =
+    '<p class="admin-rsvp-stats__loading">Loading RSVP summary…</p>';
+}
+
+function setRsvpStatsError(el: HTMLElement): void {
+  el.hidden = false;
+  el.innerHTML =
+    '<p class="admin-rsvp-stats__error">Could not load RSVP summary.</p>';
+}
+
+function updateRsvpStats(el: HTMLElement, rows: WeddingRSVP[]): void {
+  el.hidden = false;
+  el.innerHTML = renderRsvpStatsHtml(computeRsvpStats(rows));
+}
+
 function weddingRowsHtml(rows: WeddingRSVP[], colspan: number): string {
   if (rows.length === 0) {
     return `<tr><td colspan="${colspan}" class="admin-empty">No RSVPs yet.</td></tr>`;
@@ -319,6 +415,7 @@ const ADMIN_SHELL = `
     <button type="button" id="logout-btn" class="admin-dashboard__logout">Sign out</button>
   </div>
   <p id="admin-status" class="admin-status" aria-live="polite"></p>
+  <div id="admin-rsvp-stats" class="admin-rsvp-stats" hidden aria-live="polite"></div>
   <div id="admin-tablist" class="admin-tabs" role="tablist" aria-label="Submission lists"></div>
   <div id="admin-panel-mount"></div>
 </div>
@@ -792,6 +889,9 @@ export function mountAdmin(): () => void {
   const adminStatus = adminRoot.querySelector("#admin-status");
 
   const rsvpById = new Map<string, WeddingRSVP>();
+  const showRsvpStats =
+    specs?.some((s) => (SLUG_ALIASES[s.slug] ?? s.slug) === "rsvps") ?? false;
+  const rsvpStatsEl = adminRoot.querySelector("#admin-rsvp-stats");
 
   if (specs && specs.length > 0) {
     buildTabsAndPanels(adminRoot, specs, signal, { includeLogsTab: true });
@@ -832,6 +932,12 @@ export function mountAdmin(): () => void {
     if (!wraps.length || !adminStatus) return;
 
     adminStatus.textContent = "Loading…";
+    if (
+      showRsvpStats &&
+      rsvpStatsEl instanceof HTMLElement
+    ) {
+      setRsvpStatsLoading(rsvpStatsEl);
+    }
 
     for (const w of wraps) {
       const tb = tbodyInWrap(w);
@@ -889,13 +995,23 @@ export function mountAdmin(): () => void {
       if (outcomes.some((o: (typeof outcomes)[number]) => o.kind === "unauthorized")) {
         showLogin();
         adminStatus.textContent = "";
+        if (rsvpStatsEl instanceof HTMLElement) {
+          rsvpStatsEl.hidden = true;
+        }
         return;
       }
 
       let failed = 0;
+      let rsvpStatsRows: WeddingRSVP[] | undefined;
+      let rsvpStatsFailed = false;
+
       for (const outcome of outcomes) {
         if (outcome.kind === "error") {
           failed++;
+          const slug = outcome.wrap.dataset.adminSlug ?? "";
+          if ((SLUG_ALIASES[slug] ?? slug) === "rsvps") {
+            rsvpStatsFailed = true;
+          }
           const tbody = tbodyInWrap(outcome.wrap);
           if (tbody) {
             tbody.innerHTML = `<tr><td colspan="${outcome.colspan}" class="admin-empty">${escapeHtml(
@@ -913,12 +1029,21 @@ export function mountAdmin(): () => void {
         const listKey =
           SLUG_ALIASES[outcome.slug] ?? outcome.slug;
         if (listKey === "rsvps" && Array.isArray(outcome.data)) {
+          rsvpStatsRows = outcome.data as WeddingRSVP[];
           rsvpById.clear();
-          for (const row of outcome.data as WeddingRSVP[]) {
+          for (const row of rsvpStatsRows) {
             if (row && typeof row.id === "string") {
               rsvpById.set(row.id, row);
             }
           }
+        }
+      }
+
+      if (showRsvpStats && rsvpStatsEl instanceof HTMLElement) {
+        if (rsvpStatsFailed) {
+          setRsvpStatsError(rsvpStatsEl);
+        } else if (rsvpStatsRows) {
+          updateRsvpStats(rsvpStatsEl, rsvpStatsRows);
         }
       }
 

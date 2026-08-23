@@ -636,6 +636,111 @@ label:has(+ input:required):after {
   margin: 0 0 1rem;
 }
 
+.admin-rsvp-stats {
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+.admin-rsvp-stats__title {
+  margin: 0 0 0.75rem;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--heading);
+}
+
+.admin-rsvp-stats__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  margin: 0 0 0.85rem;
+}
+
+.admin-rsvp-stats__item {
+  margin: 0;
+}
+
+.admin-rsvp-stats__item dt {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.admin-rsvp-stats__item dd {
+  margin: 0.15rem 0 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 1.35rem;
+  font-weight: 650;
+  color: var(--heading);
+  line-height: 1.1;
+}
+
+.admin-rsvp-stats__meals-wrap {
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+.admin-rsvp-stats__meals-title {
+  margin: 0 0 0.45rem;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.admin-rsvp-stats__meals,
+.admin-rsvp-stats__meals-empty,
+.admin-rsvp-stats__loading,
+.admin-rsvp-stats__error {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 0.88rem;
+}
+
+.admin-rsvp-stats__meals {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1.25rem;
+}
+
+.admin-rsvp-stats__meals li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.admin-rsvp-stats__meal-label {
+  color: var(--text);
+}
+
+.admin-rsvp-stats__meal-count {
+  font-weight: 650;
+  color: var(--heading);
+}
+
+.admin-rsvp-stats__meals-empty,
+.admin-rsvp-stats__loading {
+  color: var(--text-muted);
+}
+
+.admin-rsvp-stats__error {
+  color: var(--sol-red);
+}
+
 .admin-tabs {
   display: flex;
   flex-wrap: wrap;
