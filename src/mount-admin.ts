@@ -159,7 +159,10 @@ function renderRsvpStatsHtml(stats: RsvpStats): string {
           .join("")}</ul>`;
 
   return `
-    <h2 class="admin-rsvp-stats__title">RSVP summary</h2>
+    <div class="admin-rsvp-stats__header">
+      <h2 class="admin-rsvp-stats__title">RSVP summary</h2>
+      <button type="button" class="admin-rsvp-stats__copy-emails" data-admin-action="copy-rsvp-emails">Copy emails</button>
+    </div>
     <dl class="admin-rsvp-stats__grid">
       <div class="admin-rsvp-stats__item">
         <dt>Submissions</dt>
@@ -192,6 +195,61 @@ function setRsvpStatsError(el: HTMLElement): void {
 function updateRsvpStats(el: HTMLElement, rows: WeddingRSVP[]): void {
   el.hidden = false;
   el.innerHTML = renderRsvpStatsHtml(computeRsvpStats(rows));
+}
+
+function collectRsvpEmails(rows: WeddingRSVP[]): string[] {
+  const seen = new Set<string>();
+  const emails: string[] = [];
+
+  for (const row of rows) {
+    const email = row.email.trim();
+    if (!email) continue;
+    const key = email.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    emails.push(email);
+  }
+
+  return emails.sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" })
+  );
+}
+
+async function copyTextToClipboard(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.left = "-9999px";
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    if (!document.execCommand("copy")) {
+      throw new Error("copy failed");
+    }
+  } finally {
+    document.body.removeChild(ta);
+  }
+}
+
+async function fetchRsvpRows(): Promise<WeddingRSVP[]> {
+  const res = await adminFetch("/admin/rsvps?limit=500");
+  if (res.status === 401) {
+    throw new Error("unauthorized");
+  }
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+  const data: unknown = await res.json();
+  if (!Array.isArray(data)) {
+    throw new Error("invalid response");
+  }
+  return data as WeddingRSVP[];
 }
 
 function weddingRowsHtml(rows: WeddingRSVP[], colspan: number): string {
@@ -1130,11 +1188,54 @@ export function mountAdmin(): () => void {
     }
   }
 
+  async function copyRsvpEmails(): Promise<void> {
+    if (!adminStatus) return;
+    adminStatus.textContent = "Fetching RSVP emails…";
+
+    try {
+      const rows = await fetchRsvpRows();
+      if (signal.aborted) return;
+
+      const emails = collectRsvpEmails(rows);
+      if (emails.length === 0) {
+        adminStatus.textContent = "No RSVP email addresses to copy.";
+        return;
+      }
+
+      await copyTextToClipboard(emails.join(", "));
+      if (signal.aborted) return;
+
+      adminStatus.textContent = `Copied ${emails.length} email address${
+        emails.length === 1 ? "" : "es"
+      } to the clipboard.`;
+    } catch (err) {
+      if (signal.aborted) return;
+      if (err instanceof Error && err.message === "unauthorized") {
+        showLogin();
+        if (rsvpStatsEl instanceof HTMLElement) {
+          rsvpStatsEl.hidden = true;
+        }
+        adminStatus.textContent = "";
+        return;
+      }
+      adminStatus.textContent = "Could not copy RSVP emails.";
+    }
+  }
+
   adminRoot.addEventListener(
     "click",
     (e) => {
       const t = e.target;
       if (!(t instanceof Element)) return;
+
+      const copyEmailsBtn = t.closest<HTMLElement>(
+        "[data-admin-action='copy-rsvp-emails']"
+      );
+      if (copyEmailsBtn && adminRoot.contains(copyEmailsBtn)) {
+        void copyRsvpEmails();
+        return;
+      }
+
       const btn = t.closest<HTMLElement>("[data-rsvp-action]");
       if (!btn || !adminRoot.contains(btn)) return;
       const action = btn.dataset.rsvpAction;

@@ -644,13 +644,44 @@ label:has(+ input:required):after {
   background: var(--bg-elevated);
 }
 
+.admin-rsvp-stats__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
 .admin-rsvp-stats__title {
-  margin: 0 0 0.75rem;
+  margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
     "Helvetica Neue", sans-serif;
   font-size: 0.95rem;
   font-weight: 650;
   color: var(--heading);
+}
+
+.admin-rsvp-stats__copy-emails {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.admin-rsvp-stats__copy-emails:hover {
+  color: var(--text);
+}
+
+.admin-rsvp-stats__copy-emails:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
 }
 
 .admin-rsvp-stats__grid {
