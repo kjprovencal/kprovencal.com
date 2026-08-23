@@ -31,6 +31,7 @@ interface TurnstileApi {
 declare global {
   interface Window {
     turnstile?: TurnstileApi;
+    __turnstileOnLoad?: () => void;
   }
 }
 

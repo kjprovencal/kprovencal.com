@@ -42,20 +42,123 @@ function mealSelectHtml(guestIndex: number): string {
   `;
 }
 
-function loadTurnstileScript(): Promise<void> {
+const TURNSTILE_SCRIPT_SRC =
+  "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=__turnstileOnLoad";
+const TURNSTILE_READY_TIMEOUT_MS = 10_000;
+
+let turnstileScriptLoadPromise: Promise<void> | undefined;
+let turnstileScriptError: Error | undefined;
+const turnstileReadyWaiters: Array<() => void> = [];
+
+function ensureTurnstileOnLoadCallback(): void {
+  window.__turnstileOnLoad = () => {
+    notifyTurnstileReadyWaiters();
+  };
+}
+
+function notifyTurnstileReadyWaiters(): void {
+  const waiters = turnstileReadyWaiters.splice(0);
+  for (const wake of waiters) wake();
+}
+
+function waitForTurnstileApi(): Promise<void> {
   if (window.turnstile) return Promise.resolve();
+  if (turnstileScriptError) return Promise.reject(turnstileScriptError);
+
   return new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src =
-      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error("Turnstile script failed to load"));
-    document.head.appendChild(s);
+    let settled = false;
+    const finish = (err?: Error) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
+      const idx = turnstileReadyWaiters.indexOf(onReady);
+      if (idx >= 0) turnstileReadyWaiters.splice(idx, 1);
+      if (err) reject(err);
+      else resolve();
+    };
+
+    const onReady = () => {
+      if (turnstileScriptError) {
+        finish(turnstileScriptError);
+        return;
+      }
+      if (window.turnstile) finish();
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      finish(new Error("Turnstile API timed out"));
+    }, TURNSTILE_READY_TIMEOUT_MS);
+
+    turnstileReadyWaiters.push(onReady);
+
+    const pollStart = performance.now();
+    const poll = (): void => {
+      if (settled) return;
+      if (turnstileScriptError) {
+        finish(turnstileScriptError);
+        return;
+      }
+      if (window.turnstile) {
+        finish();
+        return;
+      }
+      if (performance.now() - pollStart >= TURNSTILE_READY_TIMEOUT_MS) return;
+      requestAnimationFrame(poll);
+    };
+    requestAnimationFrame(poll);
   });
 }
 
+function injectTurnstileScript(): void {
+  if (
+    document.querySelector(
+      'script[src*="challenges.cloudflare.com/turnstile/v0/api.js"]'
+    )
+  ) {
+    return;
+  }
+
+  const s = document.createElement("script");
+  s.src = TURNSTILE_SCRIPT_SRC;
+  s.onerror = () => {
+    turnstileScriptError = new Error("Turnstile script failed to load");
+    turnstileScriptLoadPromise = undefined;
+    notifyTurnstileReadyWaiters();
+  };
+  document.head.appendChild(s);
+}
+
+function loadTurnstileScript(): Promise<void> {
+  if (window.turnstile) return Promise.resolve();
+  if (turnstileScriptLoadPromise) return turnstileScriptLoadPromise;
+
+  ensureTurnstileOnLoadCallback();
+
+  turnstileScriptLoadPromise = (async () => {
+    const ready = waitForTurnstileApi();
+    injectTurnstileScript();
+    await ready;
+    if (!window.turnstile) {
+      throw new Error("Turnstile API unavailable");
+    }
+  })().catch((err) => {
+    turnstileScriptLoadPromise = undefined;
+    throw err;
+  });
+
+  return turnstileScriptLoadPromise;
+}
+
+function resetTurnstileScriptLoad(): void {
+  turnstileScriptLoadPromise = undefined;
+  turnstileScriptError = undefined;
+  document
+    .querySelector('script[src*="challenges.cloudflare.com/turnstile/v0/api.js"]')
+    ?.remove();
+}
+
 let turnstileWidgetId: string | undefined;
+let rsvpMountSerial = 0;
 
 type RsvpAbandonReason = "navigate" | "unload";
 
@@ -148,6 +251,7 @@ function renderMealRows(count: number, container: HTMLElement): void {
 
 export function mountWeddingRsvp(): void {
   resetRsvpAbandonState();
+  const mountSerial = ++rsvpMountSerial;
 
   const form = document.getElementById(
     "rsvp-form"
@@ -166,9 +270,9 @@ export function mountWeddingRsvp(): void {
     submitButton.disabled = !form.checkValidity();
   }
 
-  async function initTurnstile(): Promise<void> {
+  async function initTurnstile(attempt = 0): Promise<void> {
     const el = document.getElementById("cf-turnstile");
-    if (!el) return;
+    if (!el || mountSerial !== rsvpMountSerial) return;
 
     if (!TURNSTILE_SITE_KEY) {
       el.innerHTML =
@@ -178,7 +282,11 @@ export function mountWeddingRsvp(): void {
 
     try {
       await loadTurnstileScript();
-      if (!window.turnstile) return;
+      if (mountSerial !== rsvpMountSerial || !el.isConnected) return;
+      if (!window.turnstile) {
+        throw new Error("Turnstile API unavailable");
+      }
+
       turnstileWidgetId = window.turnstile.render(el, {
         sitekey: TURNSTILE_SITE_KEY,
         theme: "auto",
@@ -192,8 +300,20 @@ export function mountWeddingRsvp(): void {
         },
         "expired-callback": () => refreshSubmitEnabled(),
       });
+      if (!turnstileWidgetId) {
+        throw new Error("Turnstile render returned no widget id");
+      }
     } catch (err) {
       console.warn("Turnstile: failed to load or render", err);
+      if (mountSerial !== rsvpMountSerial) return;
+      if (attempt < 2) {
+        resetTurnstileScriptLoad();
+        await new Promise((resolve) => {
+          window.setTimeout(resolve, 400 * (attempt + 1));
+        });
+        if (mountSerial !== rsvpMountSerial) return;
+        return initTurnstile(attempt + 1);
+      }
       if (statusEl) {
         statusEl.textContent =
           "Could not load security check. Please refresh the page.";
