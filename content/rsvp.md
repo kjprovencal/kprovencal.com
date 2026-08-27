@@ -7,6 +7,7 @@ We’re looking forward to seeing you at our wedding! Please use the form below 
 - Date: September 12, 2026
 - Time: 2:00 PM
 - Location: [Bailey Island Library Hall, Bailey Island, ME](https://maps.apple/p/SiEuUtJj234X.b)
+- Parking: [Mackeral Cove Parking Lot](https://maps.apple/p/VKY5um8Vd1zqVR)
 
 :letter: [View invitation](/wedding-invitation.png "Wedding invitation")
 
