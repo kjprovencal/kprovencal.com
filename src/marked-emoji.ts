@@ -31,6 +31,7 @@ const EMOJI_MAP: Record<string, string> = {
   link: "🔗",
   letter: "📧",
   menu: "🍽️",
+  program: "📜",
 };
 
 let registered = false;

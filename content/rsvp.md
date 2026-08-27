@@ -12,6 +12,8 @@ We’re looking forward to seeing you at our wedding! Please use the form below 
 
 :menu: [View menu](/wedding-menu.png "Wedding menu")
 
+:program: [View program](/wedding-program.png "Wedding program")
+
 ## Your Response
 
 [RSVP form ?form?](rsvp-form "class=rsvp-form novalidate")
