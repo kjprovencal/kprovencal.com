@@ -203,8 +203,8 @@ func formatHostBody(doc any, reasons []string) string {
 		}
 	}
 	b.WriteByte('\n')
-	b.WriteString("On main, run Host maintenance. `configure` enables unattended security upgrades. ")
-	b.WriteString("`apply` installs them now. Check reboot only when reboot_required is true.\n")
+	b.WriteString("On main, run Host maintenance once with mode configure. ")
+	b.WriteString("After that, unattended-upgrades installs security updates and reboots at 04:15 local time when a reboot is required.\n")
 	return b.String()
 }
 

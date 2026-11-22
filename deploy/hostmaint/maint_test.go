@@ -295,8 +295,17 @@ func TestUnattendedConfigIsSecurityOnly(t *testing.T) {
 	if !strings.Contains(unattendedConf, `"${distro_id}:${distro_codename}-security"`) {
 		t.Fatal("security origin missing")
 	}
-	if !strings.Contains(unattendedConf, `Automatic-Reboot "false"`) {
-		t.Fatal("automatic reboot is not disabled")
+	if !strings.Contains(unattendedConf, `Automatic-Reboot "true"`) {
+		t.Fatal("automatic reboot is disabled")
+	}
+	if strings.Contains(unattendedConf, `Automatic-Reboot "false"`) {
+		t.Fatal("automatic reboot is still off")
+	}
+	if !strings.Contains(unattendedConf, `Automatic-Reboot-Time "04:15"`) {
+		t.Fatal("reboot window missing")
+	}
+	if !strings.Contains(unattendedConf, `Automatic-Reboot-WithUsers "true"`) {
+		t.Fatal("a logged-in session would block reboot")
 	}
 	if strings.Contains(unattendedConf, "-updates") {
 		t.Fatal("updates pocket is allowed")
