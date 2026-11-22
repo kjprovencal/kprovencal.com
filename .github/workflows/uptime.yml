@@ -1,0 +1,78 @@
+name: Uptime
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: uptime
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    name: Public site
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: deploy/opsalerts/go.mod
+          cache: false
+
+      - name: Request the public origin
+        id: probe
+        env:
+          PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
+        run: |
+          set -euo pipefail
+          url="${PUBLIC_SITE_URL%/}"
+          if [ -z "$url" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "PUBLIC_SITE_URL is not set. Uptime probe skipped." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          case "$url" in
+            https://*) ;;
+            *) echo "PUBLIC_SITE_URL must start with https://" >&2; exit 1 ;;
+          esac
+          if [[ "$url" == *[[:space:]]* || "$url" == *\'* || "$url" == *\"* ]]; then
+            echo "PUBLIC_SITE_URL contains unsupported characters." >&2
+            exit 1
+          fi
+          root=$(curl --proto '=https' --tlsv1.2 --silent --show-error --max-time 20 --max-redirs 2 --output /dev/null --write-out '%{http_code}' "${url}/" || true)
+          health=$(curl --proto '=https' --tlsv1.2 --silent --show-error --max-time 20 --max-redirs 2 --output health-body.txt --write-out '%{http_code}' "${url}/healthz" || true)
+          if [ ! -f health-body.txt ]; then
+            : > health-body.txt
+          fi
+          head -c 4000 health-body.txt > health-sample.txt
+          mv health-sample.txt health-body.txt
+          echo "root=$root" >> "$GITHUB_OUTPUT"
+          echo "health=$health" >> "$GITHUB_OUTPUT"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open or close the uptime issue
+        if: steps.probe.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          go run -C deploy/opsalerts . uptime \
+            --root-code "${{ steps.probe.outputs.root }}" \
+            --health-code "${{ steps.probe.outputs.health }}" \
+            --health-body-file "$GITHUB_WORKSPACE/health-body.txt" > body.md
+          code=$?
+          set -e
+          cat body.md >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" -eq 0 ]; then
+            bash .github/scripts/upsert-issue.sh "Public site health check failed" body.md clear
+            exit 0
+          fi
+          bash .github/scripts/upsert-issue.sh "Public site health check failed" body.md open
+          exit 1

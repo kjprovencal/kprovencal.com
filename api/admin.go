@@ -59,6 +59,7 @@ func registerAdminPreflightRoutes(mux *http.ServeMux, corsAllow string) {
 		"/admin/rsvps",
 		"/admin/rsvps/{id}",
 		"/admin/logs",
+		"/admin/ops",
 		"/admin/client-errors",
 		"/admin/rsvp-abandons",
 		"/admin/events",
@@ -175,6 +176,8 @@ func mountAdminRoutes(mux *http.ServeMux, db *badger.DB, sessionSecret []byte, p
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 	}))))
+
+	mux.Handle("GET /admin/ops", withAdminCORS(corsAllow, requireAdmin(sessionSecret, http.HandlerFunc(adminOps))))
 
 	mux.Handle("GET /admin/logs", withAdminCORS(corsAllow, requireAdmin(sessionSecret, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if apiLogPath == "" {

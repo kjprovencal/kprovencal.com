@@ -1,5 +1,6 @@
 import { publicApiUrl } from "./api-base";
 import { escapeAttr, escapeHtml } from "./html-escape";
+import { renderOpsHtml, type OpsSnapshot } from "./ops-status";
 import {
   MD_TABLE_ATTR,
   MD_TABLE_CLASS,
@@ -474,7 +475,7 @@ const ADMIN_SHELL = `
   </div>
   <p id="admin-status" class="admin-status" aria-live="polite"></p>
   <div id="admin-rsvp-stats" class="admin-rsvp-stats" hidden aria-live="polite"></div>
-  <div id="admin-tablist" class="admin-tabs" role="tablist" aria-label="Submission lists"></div>
+  <div id="admin-tablist" class="admin-tabs" role="tablist" aria-label="Admin sections"></div>
   <div id="admin-panel-mount"></div>
 </div>
 `.trim();
@@ -581,6 +582,24 @@ async function loadAdminLogs(
     if (statusEl) statusEl.textContent = "";
   } catch {
     pre.textContent = "Network error while loading logs.";
+  }
+}
+
+async function loadOps(root: HTMLElement): Promise<void> {
+  const view = root.querySelector("#admin-ops-view");
+  if (!(view instanceof HTMLElement)) return;
+  view.textContent = "Loading…";
+  try {
+    const res = await adminFetch("/admin/ops");
+    if (!res.ok) {
+      view.textContent =
+        res.status === 401 ? "Sign in again to view ops." : "Could not load ops.";
+      return;
+    }
+    const data = (await res.json()) as OpsSnapshot;
+    view.innerHTML = renderOpsHtml(data);
+  } catch {
+    view.textContent = "Network error while loading ops.";
   }
 }
 
@@ -720,6 +739,44 @@ function buildTabsAndPanels(
     );
   }
 
+  const opsIndex = specs.length + (options?.includeLogsTab ? 1 : 0);
+  const opsBtn = document.createElement("button");
+  opsBtn.type = "button";
+  opsBtn.className = "admin-tab";
+  opsBtn.setAttribute("role", "tab");
+  opsBtn.id = `tab-btn-${opsIndex}`;
+  opsBtn.setAttribute("aria-selected", "false");
+  opsBtn.setAttribute("aria-controls", `tab-panel-${opsIndex}`);
+  opsBtn.dataset.tab = String(opsIndex);
+  opsBtn.textContent = "Ops";
+  tablist.appendChild(opsBtn);
+
+  const opsSection = document.createElement("section");
+  opsSection.id = `tab-panel-${opsIndex}`;
+  opsSection.className = "admin-tab-panel";
+  opsSection.setAttribute("role", "tabpanel");
+  opsSection.setAttribute("aria-labelledby", `tab-btn-${opsIndex}`);
+  opsSection.setAttribute("data-admin-ops-panel", "");
+  opsSection.hidden = true;
+
+  const opsToolbar = document.createElement("div");
+  opsToolbar.className = "admin-logs-toolbar";
+  const opsRefresh = document.createElement("button");
+  opsRefresh.type = "button";
+  opsRefresh.className = "admin-logs-refresh";
+  opsRefresh.textContent = "Refresh";
+  opsToolbar.appendChild(opsRefresh);
+
+  const opsView = document.createElement("div");
+  opsView.id = "admin-ops-view";
+  opsView.className = "admin-ops";
+  opsView.textContent = "Open this tab to load process and host status.";
+
+  opsSection.appendChild(opsToolbar);
+  opsSection.appendChild(opsView);
+  panelMount.appendChild(opsSection);
+  opsRefresh.addEventListener("click", () => void loadOps(root), { signal });
+
   const statusEl = root.querySelector("#admin-status");
   setupTabs(
     root,
@@ -730,6 +787,9 @@ function buildTabsAndPanels(
           root,
           statusEl instanceof HTMLElement ? statusEl : null
         );
+      }
+      if (panel.hasAttribute("data-admin-ops-panel")) {
+        void loadOps(root);
       }
     }
   );

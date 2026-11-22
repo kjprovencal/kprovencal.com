@@ -10,6 +10,8 @@ User=www-data
 Group=www-data
 WorkingDirectory=/var/www/kprovencal
 EnvironmentFile=-/etc/personal-site-api.env
+# Host status for Admin → Ops defaults to /var/lib/personal-site/host-status.json.
+# Set HOST_STATUS_PATH in the environment file to override it. Do not put secrets in that JSON.
 ExecStart=/var/www/kprovencal/personal-site-api
 Restart=on-failure
 RestartSec=5

@@ -9,3 +9,4 @@ api/data/
 !.env.example
 api/tmp/
 api/coverage.out
+deploy/hostmaint/personal-site-host-maint
