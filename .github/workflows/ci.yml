@@ -49,7 +49,7 @@ jobs:
 
       - name: Upload dist for deploy
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: site-dist
           path: dist/
@@ -95,7 +95,7 @@ jobs:
 
       - name: Upload API binary for deploy
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: site-api
           path: api/personal-site-api
