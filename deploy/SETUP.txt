@@ -21,22 +21,41 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
    # Passwordless sudo for the deploy user (paths may vary): install, chgrp, rm, systemctl.
    # Easiest alternative: SSH_USER=root with the key in root’s authorized_keys.
 
-3) API environment (secrets — never commit real values)
-   nano /etc/personal-site-api.env
-   Required at minimum:
-     SESSION_SECRET=<32+ random bytes>
-     ADMIN_PASSWORD_BCRYPT=<output of: go run ./cmd/hashpassword 'your-password'>
-   Recommended for production behind nginx + HTTPS:
+3) API environment
+   Each deploy to main writes /etc/personal-site-api.env (mode 600, root:root)
+   from GitHub repository secrets. The next deploy replaces the whole file.
+   Do not commit the values. Copy what is on the droplet into GitHub before
+   the workflow that writes this file reaches main. If SESSION_SECRET or
+   ADMIN_PASSWORD_BCRYPT is missing, that deploy stops before it changes the
+   file or the API binary.
+
+   Required secrets:
+     SESSION_SECRET           at least 32 characters (openssl rand -base64 32)
+     ADMIN_PASSWORD_BCRYPT    output of: go run ./cmd/hashpassword 'your-password'
+
+   The workflow always sets:
      LISTEN_ADDR=127.0.0.1:8080
      APP_ENV=production
      TRUST_PROXY=1
-     BADGER_PATH=/var/www/kprovencal/data/badger
-     # LOG_PATH defaults to api.log beside BADGER_PATH; override if needed:
-     # LOG_PATH=/var/www/kprovencal/data/api.log
-     # LOG_LEVEL=info   # default — includes every HTTP request in Admin → Logs
-   Optional:
-     CORS_ORIGIN=https://your.domain.example   # only if HTML is served from another origin
-   For same-origin (nginx proxies /api and /admin API paths), you usually omit CORS_ORIGIN.
+     BADGER_PATH=$DEPLOY_PATH/data/badger
+
+   Optional secrets, written only when set:
+     TURNSTILE_SECRET_KEY
+     CORS_ORIGIN                 only if HTML is served from another origin
+     LOG_LEVEL                   debug, info, warn, or error
+     LOG_PATH
+     HOST_STATUS_PATH
+     ADMIN_SESSION_HOURS
+     RATE_LIMIT_GET_MAX
+     RATE_LIMIT_POST_MAX
+     RATE_LIMIT_DISABLED         set to 1 to turn API rate limits off
+     SPACES_KEY, SPACES_SECRET, SPACES_BUCKET, SPACES_REGION, SPACES_ENDPOINT
+                                 all five, or none (photo albums)
+
+   For same-origin (nginx proxies /api and /admin API paths), omit CORS_ORIGIN.
+   The deploy user needs passwordless sudo for:
+     install -m 600 -o root -g root /tmp/personal-site-api.env.new /etc/personal-site-api.env
+   plus install, chgrp, rm, and systemctl for the binary, as below.
 
 4) systemd unit
    cp deploy/personal-site-api.service /etc/systemd/system/personal-site-api.service
@@ -65,7 +84,8 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
    On the droplet: ssh-keygen -t ed25519 -C "github-deploy" -f /root/.ssh/github_deploy -N ""
    Authorize for login: cat /root/.ssh/github_deploy.pub >> /root/.ssh/authorized_keys
    Paste the *private* key into GitHub repo secret SSH_PRIVATE_KEY.
-   Secrets to set: SSH_HOST, SSH_USER, DEPLOY_PATH (e.g. /var/www/kprovencal), SSH_PRIVATE_KEY.
+   Secrets to set: SSH_HOST, SSH_USER, DEPLOY_PATH (e.g. /var/www/kprovencal), SSH_PRIVATE_KEY,
+   plus the API secrets in step 3.
 
    If rsync fails with "Permission denied" on dist/: ensure DEPLOY_PATH (and dist/) is owned by
    the GitHub SSH user, not www-data.
@@ -85,7 +105,7 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
    request lines in that file.
 
 11) First deploy
-   Push to main after secrets are set; CI uploads dist + API binary and runs rsync + systemctl restart.
+   Push to main after secrets are set. CI writes /etc/personal-site-api.env, uploads dist and the API binary, then restarts personal-site-api.
 
 12) CVE alerts, ops tab, and security updates (no new port)
    After this repo is deployed, Admin → Ops shows API uptime and, once the
