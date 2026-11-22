@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/dgraph-io/badger/v4 v4.9.1
-	golang.org/x/crypto v0.52.0
+	golang.org/x/crypto v0.59.0
 )
 
 require (
@@ -19,7 +19,7 @@ require (
 	go.opentelemetry.io/otel v1.41.0 // indirect
 	go.opentelemetry.io/otel/metric v1.41.0 // indirect
 	go.opentelemetry.io/otel/trace v1.41.0 // indirect
-	golang.org/x/net v0.54.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/net v0.62.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
