@@ -1,6 +1,6 @@
 # Admin
 
-Use the password configured for this site’s API to sign in. You can review user submissions below.
+Use the password configured for this site’s API to sign in. You can review user submissions below. Photo albums — create, upload, and copy a share link — are on the **Albums** tab after you sign in.
 
 [← Back to home](/)
 

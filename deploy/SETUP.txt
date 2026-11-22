@@ -30,12 +30,20 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
      LISTEN_ADDR=127.0.0.1:8080
      APP_ENV=production
      TRUST_PROXY=1
+     # PIN attempts use the last X-Forwarded-For hop. nginx must append the client
+     # ($proxy_add_x_forwarded_for), not replace the header with the client value.
      BADGER_PATH=/var/www/kprovencal/data/badger
      # LOG_PATH defaults to api.log beside BADGER_PATH; override if needed:
      # LOG_PATH=/var/www/kprovencal/data/api.log
      # LOG_LEVEL=info   # default — includes every HTTP request in Admin → Logs
    Optional:
      CORS_ORIGIN=https://your.domain.example   # only if HTML is served from another origin
+     # Photo albums (DigitalOcean Spaces). All five, or none:
+     # SPACES_KEY=
+     # SPACES_SECRET=
+     # SPACES_BUCKET=
+     # SPACES_REGION=nyc3
+     # SPACES_ENDPOINT=https://nyc3.digitaloceanspaces.com
    For same-origin (nginx proxies /api and /admin API paths), you usually omit CORS_ORIGIN.
 
 4) systemd unit

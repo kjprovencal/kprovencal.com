@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"net/http"
@@ -48,6 +49,18 @@ func main() {
 
 	mountPublicAPI(mux, db, cors)
 	mountAdminRoutes(mux, db, sessionSecret, passwordHash, cors)
+
+	store, spacesErr := openSpacesFromEnv(context.Background())
+	if spacesErr != nil {
+		slog.Error("photo storage disabled", "err", spacesErr)
+		store = nil
+	} else if store != nil {
+		slog.Info("photo storage enabled",
+			"bucket", strings.TrimSpace(os.Getenv("SPACES_BUCKET")),
+			"region", strings.TrimSpace(os.Getenv("SPACES_REGION")),
+		)
+	}
+	mountGalleryRoutes(mux, db, sessionSecret, cors, store)
 
 	slog.Info("server starting",
 		"listen_addr", addr,

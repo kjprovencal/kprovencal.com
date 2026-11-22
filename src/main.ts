@@ -1,9 +1,11 @@
 import { marked } from "marked";
 import { initClientErrorReporting } from "./client-errors";
+import { galleryTokenFromPath } from "./gallery-path";
 import { initTheme } from "./theme";
 import { configureMarked } from "./markdown-pipeline";
 import { mountWeddingRsvp, teardownWeddingRsvp } from "./mount-rsvp";
 import { mountAdmin } from "./mount-admin";
+import { mountGallery } from "./mount-gallery";
 
 configureMarked();
 initClientErrorReporting();
@@ -112,6 +114,24 @@ async function renderRoute(): Promise<void> {
   routeTeardown?.();
   routeTeardown = undefined;
   teardownWeddingRsvp();
+
+  const galleryToken = galleryTokenFromPath(window.location.pathname);
+  if (galleryToken) {
+    document.body.classList.add("gallery-open");
+    contentRoot.innerHTML = `<div id="gallery-app"></div>`;
+    document.title = "Photo album";
+    setRobots(true);
+    mainEl.classList.add("gallery-document");
+    mainEl.classList.remove("admin-document");
+    const galleryRoot = document.getElementById("gallery-app");
+    if (galleryRoot instanceof HTMLElement) {
+      routeTeardown = mountGallery(galleryToken, galleryRoot);
+    }
+    return;
+  }
+
+  document.body.classList.remove("gallery-open");
+  mainEl.classList.remove("gallery-document");
 
   const path = getRoutePath();
   const load = loaders[path];

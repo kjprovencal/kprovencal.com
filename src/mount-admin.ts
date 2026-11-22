@@ -1,4 +1,5 @@
 import { publicApiUrl } from "./api-base";
+import { mountGalleryAdmin } from "./mount-gallery-admin";
 import { escapeAttr, escapeHtml } from "./html-escape";
 import { renderOpsHtml, type OpsSnapshot } from "./ops-status";
 import {
@@ -607,7 +608,11 @@ function buildTabsAndPanels(
   root: HTMLElement,
   specs: AdminTableSpec[],
   signal: AbortSignal,
-  options?: { includeLogsTab?: boolean }
+  options?: {
+    includeLogsTab?: boolean;
+    includeAlbumsTab?: boolean;
+    onUnauthorized?: () => void;
+  }
 ): void {
   const tablist = root.querySelector("#admin-tablist");
   const panelMount = root.querySelector("#admin-panel-mount");
@@ -645,8 +650,39 @@ function buildTabsAndPanels(
     panelMount.appendChild(section);
   });
 
+  let nextIndex = specs.length;
+  let reloadAlbums: (() => void) | undefined;
+
+  if (options?.includeAlbumsTab) {
+    const i = nextIndex;
+    nextIndex += 1;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "admin-tab";
+    btn.setAttribute("role", "tab");
+    btn.id = `tab-btn-${i}`;
+    btn.setAttribute("aria-selected", "false");
+    btn.setAttribute("aria-controls", `tab-panel-${i}`);
+    btn.dataset.tab = String(i);
+    btn.textContent = "Albums";
+    tablist.appendChild(btn);
+
+    const section = document.createElement("section");
+    section.id = `tab-panel-${i}`;
+    section.className = "admin-tab-panel";
+    section.setAttribute("role", "tabpanel");
+    section.setAttribute("aria-labelledby", `tab-btn-${i}`);
+    section.setAttribute("data-admin-albums-panel", "");
+    section.hidden = true;
+    panelMount.appendChild(section);
+    reloadAlbums = mountGalleryAdmin(section, signal, () => {
+      options.onUnauthorized?.();
+    }).reload;
+  }
+
   if (options?.includeLogsTab) {
-    const i = specs.length;
+    const i = nextIndex;
+    nextIndex += 1;
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "admin-tab";
@@ -739,7 +775,7 @@ function buildTabsAndPanels(
     );
   }
 
-  const opsIndex = specs.length + (options?.includeLogsTab ? 1 : 0);
+  const opsIndex = nextIndex;
   const opsBtn = document.createElement("button");
   opsBtn.type = "button";
   opsBtn.className = "admin-tab";
@@ -782,6 +818,9 @@ function buildTabsAndPanels(
     root,
     signal,
     (panel) => {
+      if (panel.hasAttribute("data-admin-albums-panel")) {
+        reloadAlbums?.();
+      }
       if (panel.hasAttribute("data-admin-logs-panel")) {
         void loadAdminLogs(
           root,
@@ -1012,7 +1051,11 @@ export function mountAdmin(): () => void {
   const rsvpStatsEl = adminRoot.querySelector("#admin-rsvp-stats");
 
   if (specs && specs.length > 0) {
-    buildTabsAndPanels(adminRoot, specs, signal, { includeLogsTab: true });
+    buildTabsAndPanels(adminRoot, specs, signal, {
+      includeLogsTab: true,
+      includeAlbumsTab: true,
+      onUnauthorized: () => showLogin(),
+    });
   } else if (adminStatus) {
     adminStatus.textContent =
       "Add one or more @table blocks to content/admin.md (see docs/form-markdown.md).";
