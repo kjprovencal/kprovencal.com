@@ -105,7 +105,7 @@ On **push to `main`**, after tests pass, the **`deploy`** job rsyncs **`dist/`**
 | `PATCH`| `/admin/rsvps/{id}`    | Update an RSVP (JSON body; authenticated)                             |
 | `DELETE`| `/admin/rsvps/{id}`   | Delete an RSVP (authenticated)                                        |
 | `GET`  | `/admin/logs`          | Tail or time range of `LOG_PATH` (authenticated). Query: `limit` (max 500), `since`, `until` (RFC3339 or `YYYY-MM-DD`; date-only `until` is end of that UTC day). Response includes `matched`, `truncated` when the file exceeds the scan window. |
-| `GET`  | `/admin/ops`           | Authenticated process counters (build SHA, uptime, request and 5xx totals) plus the host status file when `deploy/host_maint.py` has written it. No secrets. `GET /healthz` stays plain `ok`. |
+| `GET`  | `/admin/ops`           | Authenticated process counters (build SHA, uptime, request and 5xx totals) plus the host status file when `personal-site-host-maint` has written it. No secrets. `GET /healthz` stays plain `ok`. |
 | `GET`  | `/admin/client-errors` | JSON list of frontend errors (authenticated)                           |
 | `GET`  | `/admin/rsvp-abandons` | JSON list of incomplete RSVP form sessions (authenticated)             |
 | `GET`  | `/admin/events`        | JSON list (authenticated)                                              |

@@ -21,6 +21,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: deploy/opsalerts/go.mod
+          cache: false
+
       - name: Request the public origin
         id: probe
         env:
@@ -58,10 +63,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set +e
-          python3 .github/scripts/ops_alerts.py uptime \
+          go run -C deploy/opsalerts . uptime \
             --root-code "${{ steps.probe.outputs.root }}" \
             --health-code "${{ steps.probe.outputs.health }}" \
-            --health-body-file health-body.txt > body.md
+            --health-body-file "$GITHUB_WORKSPACE/health-body.txt" > body.md
           code=$?
           set -e
           cat body.md >> "$GITHUB_STEP_SUMMARY"

@@ -106,10 +106,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Python unit tests
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: deploy/hostmaint/go.mod
+          cache: false
+
+      - name: Go tests
         run: |
-          python3 -m unittest discover -s deploy -p 'test_*.py'
-          python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+          set -euo pipefail
+          (cd deploy/hostmaint && go test ./...)
+          (cd deploy/opsalerts && go test ./...)
 
       - name: nginx example config
         run: |

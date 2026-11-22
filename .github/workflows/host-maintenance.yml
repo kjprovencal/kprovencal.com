@@ -35,6 +35,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: deploy/hostmaint/go.mod
+          cache: false
+
+      - name: Build host maintenance binary
+        working-directory: deploy/hostmaint
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o personal-site-host-maint .
+
       - name: Check deploy secrets
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -85,7 +94,7 @@ jobs:
             exit 1
           fi
           target="${SSH_USER}@${SSH_HOST}"
-          scp -o BatchMode=yes deploy/host_maint.py "${target}:/tmp/personal-site-host-maint.new"
+          scp -o BatchMode=yes deploy/hostmaint/personal-site-host-maint "${target}:/tmp/personal-site-host-maint.new"
           ssh -o BatchMode=yes "$target" "sudo -n install -m 0755 -o root -g root /tmp/personal-site-host-maint.new /usr/local/sbin/personal-site-host-maint && sudo -n rm -f /tmp/personal-site-host-maint.new"
           set +e
           ssh -o BatchMode=yes "$target" "if [ \"\$(id -u)\" -eq 0 ]; then exec /usr/local/sbin/personal-site-host-maint ${args}; fi; exec sudo -n /usr/local/sbin/personal-site-host-maint ${args}"

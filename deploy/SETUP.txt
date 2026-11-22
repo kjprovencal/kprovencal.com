@@ -89,7 +89,7 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
 
 12) CVE alerts, ops tab, and security updates (no new port)
    After this repo is deployed, Admin → Ops shows API uptime and, once the
-   host script has run, kernel/nginx/OpenSSH package status. The status file
+   host program has run, kernel/nginx/OpenSSH package status. The status file
    is /var/lib/personal-site/host-status.json, mode 0640 root:www-data.
    GET /healthz on the API is still the text "ok". The example nginx vhost
    proxies location = /healthz; the live certbot file does not until you copy
@@ -114,9 +114,12 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
    environment production-host; add yourself as a required reviewer if you
    want a second click.
 
-   If the deploy user is not root and sudo refuses the script, the job prints
-   one sudoers line. Install that as root. It allows only
-   /usr/local/sbin/personal-site-host-maint, not arbitrary commands.
+   Host maintenance builds a static linux/amd64 Go binary in CI and installs it
+   at /usr/local/sbin/personal-site-host-maint, mode 0755 root:root. The droplet
+   does not need a Go or Node toolchain for that program. If the deploy user is
+   not root and sudo refuses the program, the job prints one sudoers line.
+   Install that as root. It allows only that binary's status, configure, and
+   apply commands, not arbitrary commands.
 
    Kernel CVE-2026-99288 is not fixed in Ubuntu as of 20 Nov 2026. configure
    will not clear it. When a kernel later shows up under security updates,

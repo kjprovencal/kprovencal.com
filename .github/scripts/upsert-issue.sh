@@ -27,14 +27,8 @@ fi
 
 number=$(
   gh issue list --state open --limit 30 --json number,title |
-    TITLE="$title" python3 -c '
-import json, os, sys
-want = os.environ["TITLE"]
-for item in json.load(sys.stdin):
-    if item.get("title") == want:
-        print(item["number"])
-        break
-'
+    jq -r --arg title "$title" '.[] | select(.title == $title) | .number' |
+    head -n 1
 )
 
 tmp=$(mktemp)
