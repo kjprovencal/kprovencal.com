@@ -8,53 +8,6 @@ import (
 	"testing"
 )
 
-func TestHighNpmAndCleanGovulnIsActionable(t *testing.T) {
-	code, body := summarizeAudit(0, "No vulnerabilities found.", 1, map[string]any{
-		"vulnerabilities": map[string]any{
-			"marked": map[string]any{
-				"severity": "high",
-				"via":      []any{map[string]any{"title": "bad parse <x>"}},
-			},
-		},
-		"metadata": map[string]any{
-			"vulnerabilities": map[string]any{"moderate": 2, "high": 1},
-		},
-	})
-	if code != 2 {
-		t.Fatalf("code = %d", code)
-	}
-	if !strings.Contains(body, "high: marked") {
-		t.Fatal(body)
-	}
-	if !strings.Contains(body, "Moderate npm findings (not alerting): 2.") {
-		t.Fatal(body)
-	}
-}
-
-func TestModerateOnlyIsQuiet(t *testing.T) {
-	code, _ := summarizeAudit(0, "No vulnerabilities found.", 1, map[string]any{
-		"vulnerabilities": map[string]any{
-			"vite": map[string]any{"severity": "moderate", "via": []any{"vite"}},
-		},
-		"metadata": map[string]any{
-			"vulnerabilities": map[string]any{"moderate": 1},
-		},
-	})
-	if code != 0 {
-		t.Fatalf("code = %d", code)
-	}
-}
-
-func TestToolFailure(t *testing.T) {
-	code, body := summarizeAudit(1, "boom", 1, map[string]any{"error": "nope"})
-	if code != 1 {
-		t.Fatalf("code = %d", code)
-	}
-	if !strings.Contains(body, "failed") {
-		t.Fatal(body)
-	}
-}
-
 func TestPendingSecurityUpdate(t *testing.T) {
 	reasons := hostReasons(map[string]any{
 		"security_upgrade_count": 1,

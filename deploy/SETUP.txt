@@ -96,7 +96,7 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
    that location in. Do not add a "patch" button to the admin UI.
 
    Workflows (Actions tab):
-     CVE audit          weekly govulncheck + npm audit. No SSH.
+     Dependabot         weekly PRs for npm, Go modules, and GitHub Actions.
      Host CVE watch     daily SSH, status only, opens an issue if security
                         updates are pending or the loopback API is down.
      Host maintenance   manual, main branch only. Inputs: status, configure,

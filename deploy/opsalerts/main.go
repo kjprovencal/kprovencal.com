@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -19,19 +18,17 @@ func main() {
 
 func run(argv []string) int {
 	if len(argv) == 0 {
-		fmt.Fprintln(os.Stderr, "usage: opsalerts summarize-audit|host-reasons|uptime ...")
+		fmt.Fprintln(os.Stderr, "usage: opsalerts host-reasons|uptime ...")
 		return 1
 	}
 	command, rest := argv[0], argv[1:]
 	switch command {
-	case "summarize-audit":
-		return cmdSummarize(rest)
 	case "host-reasons":
 		return cmdHost(rest)
 	case "uptime":
 		return cmdUptime(rest)
 	default:
-		fmt.Fprintln(os.Stderr, "usage: opsalerts summarize-audit|host-reasons|uptime ...")
+		fmt.Fprintln(os.Stderr, "usage: opsalerts host-reasons|uptime ...")
 		return 1
 	}
 }
@@ -68,221 +65,6 @@ func clip(value string, limit int) string {
 		return value
 	}
 	return string(runes[:limit])
-}
-
-func tail(value string, limit int) string {
-	runes := []rune(value)
-	if len(runes) <= limit {
-		return value
-	}
-	return string(runes[len(runes)-limit:])
-}
-
-func npmHighFindings(doc any) []string {
-	object, ok := doc.(map[string]any)
-	if !ok {
-		return []string{}
-	}
-	vulns, ok := object["vulnerabilities"].(map[string]any)
-	if !ok {
-		return []string{}
-	}
-	names := make([]string, 0, len(vulns))
-	for name := range vulns {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	lines := []string{}
-	for _, name := range names {
-		info, ok := vulns[name].(map[string]any)
-		if !ok {
-			continue
-		}
-		severity := strings.ToLower(asString(info["severity"]))
-		if severity != "high" && severity != "critical" {
-			continue
-		}
-		title := viaTitle(info["via"])
-		suffix := ""
-		if title != "" {
-			suffix = " — " + oneLine(title, 180)
-		}
-		lines = append(lines, severity+": "+oneLine(name, 80)+suffix)
-	}
-	return lines
-}
-
-func viaTitle(via any) string {
-	items, ok := via.([]any)
-	if !ok {
-		return ""
-	}
-	for _, item := range items {
-		switch value := item.(type) {
-		case map[string]any:
-			title, present := value["title"]
-			if !present || !truthy(title) {
-				continue
-			}
-			return asString(title)
-		case string:
-			return value
-		}
-	}
-	return ""
-}
-
-func truthy(value any) bool {
-	if value == nil {
-		return false
-	}
-	switch v := value.(type) {
-	case bool:
-		return v
-	case string:
-		return v != ""
-	case int:
-		return v != 0
-	case int64:
-		return v != 0
-	case float64:
-		return v != 0
-	case []any:
-		return len(v) > 0
-	case map[string]any:
-		return len(v) > 0
-	default:
-		return true
-	}
-}
-
-func asString(value any) string {
-	switch v := value.(type) {
-	case string:
-		return v
-	case nil:
-		return ""
-	default:
-		return displayText(v)
-	}
-}
-
-func moderateCount(doc any) int {
-	object, ok := doc.(map[string]any)
-	if !ok {
-		return 0
-	}
-	meta, ok := object["metadata"].(map[string]any)
-	if !ok {
-		return 0
-	}
-	vulns, ok := meta["vulnerabilities"].(map[string]any)
-	if !ok {
-		return 0
-	}
-	raw, ok := vulns["moderate"]
-	if !ok || raw == nil {
-		return 0
-	}
-	n, err := asInt(raw)
-	if err != nil {
-		return 0
-	}
-	return n
-}
-
-func asInt(value any) (int, error) {
-	switch n := value.(type) {
-	case bool:
-		if n {
-			return 1, nil
-		}
-		return 0, nil
-	case int:
-		return n, nil
-	case int64:
-		return int(n), nil
-	case float64:
-		return int(n), nil
-	case json.Number:
-		if i, err := n.Int64(); err == nil {
-			return int(i), nil
-		}
-		f, err := n.Float64()
-		if err != nil {
-			return 0, err
-		}
-		return int(f), nil
-	case string:
-		parsed, err := strconv.Atoi(strings.TrimSpace(n))
-		if err != nil {
-			return 0, err
-		}
-		return parsed, nil
-	default:
-		return 0, errors.New("not an int")
-	}
-}
-
-func npmFailed(code int, doc any) bool {
-	object, ok := doc.(map[string]any)
-	if (code != 0 && code != 1) || !ok {
-		return true
-	}
-	_, hasError := object["error"]
-	_, hasVulns := object["vulnerabilities"]
-	return hasError && !hasVulns
-}
-
-func govulnKind(code int) string {
-	switch code {
-	case 0:
-		return "clean"
-	case 3:
-		return "findings"
-	default:
-		return "error"
-	}
-}
-
-func summarizeAudit(govulnCode int, govulnLog string, npmCode int, npmDoc any) (int, string) {
-	govuln := govulnKind(govulnCode)
-	findings := npmHighFindings(npmDoc)
-	if govuln == "error" || npmFailed(npmCode, npmDoc) {
-		body := strings.Join([]string{
-			"## Dependency CVE audit failed",
-			"",
-			fmt.Sprintf("govulncheck exit %d. npm audit exit %d.", govulnCode, npmCode),
-			"",
-			"```",
-			tail(govulnLog, 4000),
-			"```",
-			"",
-		}, "\n")
-		return 1, body
-	}
-	actionable := govuln == "findings" || len(findings) > 0
-	lines := []string{"## Dependency CVE audit", ""}
-	if len(findings) > 0 {
-		lines = append(lines, "npm high or critical:")
-		for _, item := range findings {
-			lines = append(lines, "- "+item)
-		}
-	} else {
-		lines = append(lines, "No high or critical npm findings.")
-	}
-	lines = append(lines, fmt.Sprintf("Moderate npm findings (not alerting): %d.", moderateCount(npmDoc)), "")
-	if govuln == "findings" {
-		lines = append(lines, "govulncheck reported vulnerabilities:")
-	} else {
-		lines = append(lines, "govulncheck reported no vulnerabilities.")
-	}
-	lines = append(lines, "", "```", tail(govulnLog, 8000), "```", "")
-	code := 0
-	if actionable {
-		code = 2
-	}
-	return code, strings.Join(lines, "\n")
 }
 
 func hostReasons(doc any) []string {
@@ -497,50 +279,6 @@ func readText(path string) (string, error) {
 		return "", err
 	}
 	return strings.ToValidUTF8(string(data), "\uFFFD"), nil
-}
-
-func cmdSummarize(argv []string) int {
-	fs := flag.NewFlagSet("summarize-audit", flag.ContinueOnError)
-	fs.SetOutput(os.Stderr)
-	govulnExitText := fs.String("govuln-exit", "", "govulncheck exit code")
-	govulnLog := fs.String("govuln-log", "", "govulncheck log")
-	npmExitText := fs.String("npm-exit", "", "npm audit exit code")
-	npmAudit := fs.String("npm-audit", "", "npm audit JSON")
-	if err := fs.Parse(argv); err != nil {
-		return 1
-	}
-	if *govulnExitText == "" || *govulnLog == "" || *npmExitText == "" || *npmAudit == "" {
-		fmt.Fprintln(os.Stderr, "summarize-audit requires --govuln-exit, --govuln-log, --npm-exit, and --npm-audit")
-		return 1
-	}
-	govulnExit, err := strconv.Atoi(*govulnExitText)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "could not read govuln exit code")
-		return 1
-	}
-	npmExit, err := strconv.Atoi(*npmExitText)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "could not read npm exit code")
-		return 1
-	}
-	log, err := readText(*govulnLog)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not read govuln log: %s\n", err.Error())
-		return 1
-	}
-	doc, err := readJSON(*npmAudit)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not read %s: %s\n", baseName(*npmAudit), err.Error())
-		code, body := summarizeAudit(govulnExit, log, npmExit, map[string]any{"error": "unreadable"})
-		fmt.Fprint(os.Stdout, body)
-		if code == 0 {
-			return 1
-		}
-		return code
-	}
-	code, body := summarizeAudit(govulnExit, log, npmExit, doc)
-	fmt.Fprint(os.Stdout, body)
-	return code
 }
 
 func cmdHost(argv []string) int {
