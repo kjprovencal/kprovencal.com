@@ -80,42 +80,43 @@ func readSession(r *http.Request, secret []byte) error {
 	return parseSession(secret, c.Value)
 }
 
+// cookieSameSite is Lax for a same-origin site, including production.
+// SameSite=None is only for a cross-origin admin UI (CORS_ORIGIN set) on HTTPS,
+// so another website cannot send the admin or gallery cookie.
+func cookieSameSite() http.SameSite {
+	if isProd() && strings.TrimSpace(os.Getenv("CORS_ORIGIN")) != "" {
+		return http.SameSiteNoneMode
+	}
+	return http.SameSiteLaxMode
+}
+
 func setSessionCookie(w http.ResponseWriter, secret []byte, exp time.Time) error {
 	val, err := signSession(secret, exp)
 	if err != nil {
 		return err
 	}
-	sameSite := http.SameSiteLaxMode
 	secure := isProd()
-	if secure {
-		// Admin UI on another origin (e.g. www) must send this cookie on credentialed fetches to the API host.
-		sameSite = http.SameSiteNoneMode
-	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookieName,
 		Value:    val,
 		Path:     "/",
 		MaxAge:   int(time.Until(exp).Seconds()),
 		HttpOnly: true,
-		SameSite: sameSite,
+		SameSite: cookieSameSite(),
 		Secure:   secure,
 	})
 	return nil
 }
 
 func clearSessionCookie(w http.ResponseWriter) {
-	sameSite := http.SameSiteLaxMode
 	secure := isProd()
-	if secure {
-		sameSite = http.SameSiteNoneMode
-	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookieName,
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,
 		HttpOnly: true,
-		SameSite: sameSite,
+		SameSite: cookieSameSite(),
 		Secure:   secure,
 	})
 }

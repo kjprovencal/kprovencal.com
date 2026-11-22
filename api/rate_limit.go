@@ -53,3 +53,24 @@ func (l *slidingWindowLimiter) allow(key string) bool {
 	l.hits[key] = kept
 	return true
 }
+
+// blocked reports whether key is already at the window cap, without recording a hit.
+func (l *slidingWindowLimiter) blocked(key string) bool {
+	if key == "" {
+		key = "unknown"
+	}
+	cutoff := time.Now().Add(-l.window)
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	times := l.hits[key]
+	kept := times[:0]
+	for _, t := range times {
+		if t.After(cutoff) {
+			kept = append(kept, t)
+		}
+	}
+	l.hits[key] = kept
+	return len(kept) >= l.max
+}
