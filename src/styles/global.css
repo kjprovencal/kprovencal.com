@@ -1156,3 +1156,333 @@ label:has(+ input:required):after {
   margin: 0 0 1rem;
   color: var(--text-muted);
 }
+
+/* —— Photo albums —— */
+body.gallery-open .site-header,
+.gallery-document {
+  max-width: min(100%, 72rem);
+}
+
+.gallery-admin__title,
+.gallery__title {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  color: var(--heading);
+  font-size: 1.35rem;
+  font-weight: 650;
+  line-height: 1.25;
+  margin: 0 0 0.35rem;
+}
+
+.gallery-admin__hint,
+.gallery__hint,
+.gallery-admin__status,
+.gallery__status,
+.gallery-admin__empty,
+.gallery__empty {
+  margin: 0 0 0.85rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.gallery-admin__status:empty,
+.gallery__status:empty {
+  display: none;
+}
+
+.gallery-form {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+}
+
+.gallery-form--inline {
+  margin-bottom: 1rem;
+}
+
+.gallery-field {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.gallery-field--inline {
+  margin: 0;
+}
+
+.gallery-field__label {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.gallery-field__input {
+  font: inherit;
+  font-size: 1rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.45rem 0.7rem;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.gallery-field__input:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+.gallery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.gallery-button {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  min-height: 2.75rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.gallery-button--primary {
+  background: var(--sol-blue);
+  border-color: var(--sol-blue);
+  color: var(--sol-base3);
+}
+
+:root[data-theme="dark"] .gallery-button--primary {
+  color: var(--sol-base03);
+}
+
+.gallery-button--danger {
+  color: var(--sol-red);
+}
+
+.gallery-button:hover {
+  filter: brightness(1.05);
+}
+
+.gallery-button:focus-visible,
+.gallery-card--button:focus-visible,
+.gallery-file-label:focus-within {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+.gallery-album-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.gallery-album {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+.gallery-album__title {
+  margin: 0 0 0.15rem;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 1.05rem;
+  color: var(--heading);
+}
+
+.gallery-album__meta,
+.gallery-share {
+  margin: 0 0 0.65rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.gallery-share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.gallery-share__url {
+  overflow-wrap: anywhere;
+}
+
+.gallery-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.gallery-file-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.25rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--heading);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.gallery-upload-log,
+.gallery-grid {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+.gallery-upload {
+  margin: 0 0 0.75rem;
+}
+
+.gallery-upload__name,
+.gallery-upload__note,
+.gallery-card__name {
+  margin: 0.2rem 0;
+  font-size: 0.88rem;
+}
+
+.gallery-upload--error .gallery-upload__note {
+  color: var(--sol-red);
+}
+
+.gallery-progress {
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.gallery-progress > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--sol-blue);
+}
+
+.gallery-grid > .gallery-admin__empty {
+  grid-column: 1 / -1;
+}
+
+.gallery-card,
+.gallery-card--button {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.gallery-card--button {
+  cursor: pointer;
+}
+
+.gallery-card__img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+.gallery-card__pending {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.gallery-card__name {
+  overflow-wrap: anywhere;
+}
+
+.gallery-viewer {
+  width: min(100% - 1.5rem, 56rem);
+  max-height: calc(100vh - 1.5rem);
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.gallery-viewer::backdrop {
+  background: color-mix(in srgb, var(--sol-base03) 72%, transparent);
+}
+
+.gallery-viewer__img {
+  display: block;
+  width: 100%;
+  max-height: min(70vh, 40rem);
+  object-fit: contain;
+  background: var(--bg-elevated);
+  border-radius: 8px;
+}
+
+.gallery-viewer__name {
+  margin: 0.55rem 0;
+  overflow-wrap: anywhere;
+}
+
+.gallery-viewer__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.6rem;
+  margin: 0 0 0.75rem;
+}
+
+.gallery-viewer__bar .gallery-field {
+  flex: 1 1 12rem;
+}
+
+.gallery-pin {
+  max-width: 22rem;
+}
+
+@media (max-width: 40rem) {
+  .gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gallery-button,
+  .gallery-file-label {
+    width: 100%;
+  }
+
+  .gallery-actions .gallery-button {
+    flex: 1 1 8rem;
+  }
+}

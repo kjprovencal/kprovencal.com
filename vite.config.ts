@@ -16,6 +16,8 @@ export default defineConfig({
         // App shell / DOM wiring — covered by manual or future E2E tests, not Vitest.
         "src/main.ts",
         "src/mount-admin.ts",
+        "src/mount-gallery.ts",
+        "src/mount-gallery-admin.ts",
         "src/mount-rsvp.ts",
         "src/theme.ts",
       ],
