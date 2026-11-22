@@ -99,11 +99,11 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
      Dependabot         weekly PRs for npm, Go modules, and GitHub Actions.
      Host CVE watch     daily SSH, status only, opens an issue if security
                         updates are pending or the loopback API is down.
-     Host maintenance   manual, main branch only. Inputs: status, configure,
-                        or apply. Reboot is off unless you check it.
-                        configure installs unattended-upgrades for the security
-                        pocket only (no automatic reboot), a daily status timer,
-                        and server_tokens off. apply runs unattended-upgrade now.
+     Host maintenance   manual, main branch only. Run configure once.
+                        That installs unattended-upgrades for the security
+                        pocket only, a daily status timer, server_tokens off,
+                        and an automatic reboot at 04:15 local time when a
+                        reboot is required.
      Uptime             hourly GET / on PUBLIC_SITE_URL (repository variable,
                         https origin, no path). Set that variable or the job
                         stays green and skips. /healthz is an API check only
@@ -122,6 +122,6 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
    apply commands, not arbitrary commands.
 
    Kernel CVE-2026-99288 is not fixed in Ubuntu as of 20 Nov 2026. configure
-   will not clear it. When a kernel later shows up under security updates,
-   run Host maintenance → apply with reboot checked during a short outage.
+   will not clear it. When Ubuntu later publishes a kernel in the security
+   pocket, unattended-upgrades installs it and reboots at 04:15 local time.
    Go stdlib fixes still ship by merging a rebuild to main, not by apt.

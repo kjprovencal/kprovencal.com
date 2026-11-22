@@ -13,7 +13,7 @@ on:
           - apply
         default: status
       reboot:
-        description: Reboot after apply when a kernel update needs it
+        description: Leave off. Ordinary reboots are 04:15 local time after configure. This only reboots immediately after apply.
         required: true
         type: boolean
         default: false

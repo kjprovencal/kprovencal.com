@@ -40,20 +40,21 @@ var (
 
 const kernelNote = "A zero security-upgrade count does not mean every kernel CVE is patched. " +
 	"CVE-2026-99288 (Linux TCP, remote denial of service) had no Ubuntu fix as of 20 Nov 2026. " +
-	"Unattended-upgrades installs a kernel when Ubuntu publishes one and does not reboot unless apply --reboot is used."
+	"Unattended-upgrades installs a kernel when Ubuntu publishes one and reboots at 04:15 local time when a reboot is required."
 
 const nginxNote = "CVE-2026-123007 and CVE-2026-123633 apply when HTTP/2 is enabled, which certbot usually turns on. " +
 	"CVE-2026-118899 can hang a worker while it reads a TLS request body. " +
 	"The fix is the Ubuntu security package (USN-9159-1 / USN-9182-1 or newer), not a version string of 1.30.7."
 
-const unattendedConf = `// Managed by personal-site-host-maint. Security pockets only. No automatic reboot.
+const unattendedConf = `// Managed by personal-site-host-maint. Security pockets only. Reboot at 04:15 local time when required.
 Unattended-Upgrade::Allowed-Origins {
         "${distro_id}:${distro_codename}-security";
         "${distro_id}ESMApps:${distro_codename}-apps-security";
         "${distro_id}ESM:${distro_codename}-infra-security";
 };
-Unattended-Upgrade::Automatic-Reboot "false";
-Unattended-Upgrade::Automatic-Reboot-WithUsers "false";
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-Time "04:15";
+Unattended-Upgrade::Automatic-Reboot-WithUsers "true";
 Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
 Unattended-Upgrade::Remove-Unused-Dependencies "true";
 `
