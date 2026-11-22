@@ -1,0 +1,99 @@
+name: Host CVE watch
+
+on:
+  schedule:
+    - cron: "41 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: host-cve-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    name: Read droplet package status
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check deploy secrets
+        id: gate
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "SSH deploy secrets are not available; host watch skipped." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: webfactory/ssh-agent@v0.9.0
+        if: steps.gate.outputs.ready == 'true'
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Known hosts
+        if: steps.gate.outputs.ready == 'true'
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          if [ -n "$SSH_KNOWN_HOSTS" ]; then
+            printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          fi
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Collect status
+        id: status
+        if: steps.gate.outputs.ready == 'true'
+        continue-on-error: true
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          set -euo pipefail
+          target="${SSH_USER}@${SSH_HOST}"
+          scp -o BatchMode=yes deploy/host_maint.py "${target}:/tmp/personal-site-host-maint.new"
+          ssh -o BatchMode=yes "$target" "sudo -n install -m 0755 -o root -g root /tmp/personal-site-host-maint.new /usr/local/sbin/personal-site-host-maint && sudo -n rm -f /tmp/personal-site-host-maint.new"
+          ssh -o BatchMode=yes "$target" 'if [ "$(id -u)" -eq 0 ]; then exec /usr/local/sbin/personal-site-host-maint status; fi; exec sudo -n /usr/local/sbin/personal-site-host-maint status' > host-status.json
+
+      - name: Open or close the host issue
+        if: steps.gate.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.status.outcome }}" != "success" ]; then
+            printf '%s\n' "Host watch could not collect status. The droplet address is not included here. Open the Actions log for this run. If sudo asked for a password, root needs to allow only /usr/local/sbin/personal-site-host-maint." > body.md
+            bash .github/scripts/upsert-issue.sh "Host CVE watch failed" body.md open
+            exit 1
+          fi
+          set +e
+          python3 .github/scripts/ops_alerts.py host-reasons host-status.json > body.md
+          code=$?
+          set -e
+          cat body.md >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" -eq 0 ]; then
+            bash .github/scripts/upsert-issue.sh "Host security updates pending" body.md clear
+            bash .github/scripts/upsert-issue.sh "Host CVE watch failed" body.md clear
+            exit 0
+          fi
+          if [ "$code" -eq 2 ]; then
+            bash .github/scripts/upsert-issue.sh "Host security updates pending" body.md open
+            bash .github/scripts/upsert-issue.sh "Host CVE watch failed" body.md clear
+            exit 1
+          fi
+          bash .github/scripts/upsert-issue.sh "Host CVE watch failed" body.md open
+          exit 1

@@ -9,3 +9,5 @@ api/data/
 !.env.example
 api/tmp/
 api/coverage.out
+__pycache__/
+*.pyc

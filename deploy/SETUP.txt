@@ -86,3 +86,39 @@ DigitalOcean droplet — one-time setup (run as root or sudo)
 
 11) First deploy
    Push to main after secrets are set; CI uploads dist + API binary and runs rsync + systemctl restart.
+
+12) CVE alerts, ops tab, and security updates (no new port)
+   After this repo is deployed, Admin → Ops shows API uptime and, once the
+   host script has run, kernel/nginx/OpenSSH package status. The status file
+   is /var/lib/personal-site/host-status.json, mode 0640 root:www-data.
+   GET /healthz on the API is still the text "ok". The example nginx vhost
+   proxies location = /healthz; the live certbot file does not until you copy
+   that location in. Do not add a "patch" button to the admin UI.
+
+   Workflows (Actions tab):
+     CVE audit          weekly govulncheck + npm audit. No SSH.
+     Host CVE watch     daily SSH, status only, opens an issue if security
+                        updates are pending or the loopback API is down.
+     Host maintenance   manual, main branch only. Inputs: status, configure,
+                        or apply. Reboot is off unless you check it.
+                        configure installs unattended-upgrades for the security
+                        pocket only (no automatic reboot), a daily status timer,
+                        and server_tokens off. apply runs unattended-upgrade now.
+     Uptime             hourly GET / on PUBLIC_SITE_URL (repository variable,
+                        https origin, no path). Set that variable or the job
+                        stays green and skips. /healthz is an API check only
+                        when the body is exactly ok.
+
+   These reuse SSH_HOST, SSH_USER, and SSH_PRIVATE_KEY. Optional secret
+   SSH_KNOWN_HOSTS replaces ssh-keyscan. Host maintenance uses the GitHub
+   environment production-host; add yourself as a required reviewer if you
+   want a second click.
+
+   If the deploy user is not root and sudo refuses the script, the job prints
+   one sudoers line. Install that as root. It allows only
+   /usr/local/sbin/personal-site-host-maint, not arbitrary commands.
+
+   Kernel CVE-2026-99288 is not fixed in Ubuntu as of 20 Nov 2026. configure
+   will not clear it. When a kernel later shows up under security updates,
+   run Host maintenance → apply with reboot checked during a short outage.
+   Go stdlib fixes still ship by merging a rebuild to main, not by apt.

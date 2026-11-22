@@ -1096,3 +1096,63 @@ label:has(+ input:required):after {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+.admin-ops__title {
+  margin: 0.4rem 0 0.55rem;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.admin-ops__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+}
+
+.admin-ops__item {
+  margin: 0;
+}
+
+.admin-ops__item dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.admin-ops__item dd {
+  margin: 0.15rem 0 0;
+  font-size: 0.92rem;
+  word-break: break-word;
+}
+
+.admin-ops__alerts,
+.admin-ops__packages,
+.admin-ops__notes,
+.admin-ops__hint {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
+  font-size: 0.88rem;
+}
+
+.admin-ops__alerts {
+  margin: 0 0 0.8rem;
+  padding: 0.65rem 0.8rem 0.65rem 1.4rem;
+  border: 1px solid color-mix(in srgb, var(--sol-red, #b42318) 45%, var(--border));
+  border-radius: 6px;
+  color: var(--heading);
+}
+
+.admin-ops__packages,
+.admin-ops__notes {
+  margin: 0 0 0.8rem;
+  padding-left: 1.2rem;
+}
+
+.admin-ops__hint {
+  margin: 0 0 1rem;
+  color: var(--text-muted);
+}
