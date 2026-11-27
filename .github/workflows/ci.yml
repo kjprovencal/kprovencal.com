@@ -123,6 +123,9 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
           bash deploy/lint-nginx-example.sh
 
+      - name: API environment file script
+        run: bash deploy/write-api-env_test.sh
+
   deploy:
     name: Deploy to droplet
     needs: [frontend, api, host-maint]
@@ -151,6 +154,42 @@ jobs:
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Check out env writer
+        uses: actions/checkout@v4
+
+      # This step must not use set -x. xtrace would print the secret values.
+      # GitHub secret masking is only a backstop. Required secrets are checked
+      # before SSH, so a missing SESSION_SECRET does not replace the file or binary.
+      - name: Write API environment
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          ADMIN_PASSWORD_BCRYPT: ${{ secrets.ADMIN_PASSWORD_BCRYPT }}
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+          CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
+          LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
+          LOG_PATH: ${{ secrets.LOG_PATH }}
+          HOST_STATUS_PATH: ${{ secrets.HOST_STATUS_PATH }}
+          ADMIN_SESSION_HOURS: ${{ secrets.ADMIN_SESSION_HOURS }}
+          RATE_LIMIT_GET_MAX: ${{ secrets.RATE_LIMIT_GET_MAX }}
+          RATE_LIMIT_POST_MAX: ${{ secrets.RATE_LIMIT_POST_MAX }}
+          RATE_LIMIT_DISABLED: ${{ secrets.RATE_LIMIT_DISABLED }}
+          SPACES_KEY: ${{ secrets.SPACES_KEY }}
+          SPACES_SECRET: ${{ secrets.SPACES_SECRET }}
+          SPACES_BUCKET: ${{ secrets.SPACES_BUCKET }}
+          SPACES_REGION: ${{ secrets.SPACES_REGION }}
+          SPACES_ENDPOINT: ${{ secrets.SPACES_ENDPOINT }}
+        run: |
+          set -euo pipefail
+          dest=$(mktemp)
+          chmod 600 "$dest"
+          trap 'rm -f "$dest"' EXIT
+          bash deploy/write-api-env.sh "$dest"
+          target="${SSH_USER}@${SSH_HOST}"
+          ssh "$target" 'umask 077; cat > /tmp/personal-site-api.env.new && sudo install -m 600 -o root -g root /tmp/personal-site-api.env.new /etc/personal-site-api.env; status=$?; rm -f /tmp/personal-site-api.env.new; exit $status' < "$dest"
 
       - name: Rsync static site and install API binary
         env:

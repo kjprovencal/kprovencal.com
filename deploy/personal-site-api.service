@@ -9,6 +9,7 @@ Type=simple
 User=www-data
 Group=www-data
 WorkingDirectory=/var/www/kprovencal
+# Written by the deploy job from GitHub secrets. Mode 600, root:root.
 EnvironmentFile=-/etc/personal-site-api.env
 # Host status for Admin → Ops defaults to /var/lib/personal-site/host-status.json.
 # Set HOST_STATUS_PATH in the environment file to override it. Do not put secrets in that JSON.
