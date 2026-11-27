@@ -106,11 +106,11 @@ if [[ -n "$rate_off" && "$rate_off" != "1" ]]; then
 fi
 
 missing_spaces=()
-[[ -z "$spaces_key" ]] && missing_spaces+=(SPACES_KEY)
-[[ -z "$spaces_secret" ]] && missing_spaces+=(SPACES_SECRET)
-[[ -z "$spaces_bucket" ]] && missing_spaces+=(SPACES_BUCKET)
-[[ -z "$spaces_region" ]] && missing_spaces+=(SPACES_REGION)
-[[ -z "$spaces_endpoint" ]] && missing_spaces+=(SPACES_ENDPOINT)
+if [[ -z "$spaces_key" ]]; then missing_spaces+=(SPACES_KEY); fi
+if [[ -z "$spaces_secret" ]]; then missing_spaces+=(SPACES_SECRET); fi
+if [[ -z "$spaces_bucket" ]]; then missing_spaces+=(SPACES_BUCKET); fi
+if [[ -z "$spaces_region" ]]; then missing_spaces+=(SPACES_REGION); fi
+if [[ -z "$spaces_endpoint" ]]; then missing_spaces+=(SPACES_ENDPOINT); fi
 if [[ ${#missing_spaces[@]} -gt 0 && ${#missing_spaces[@]} -lt 5 ]]; then
   echo "write-api-env: set all of SPACES_KEY, SPACES_SECRET, SPACES_BUCKET, SPACES_REGION, and SPACES_ENDPOINT, or leave them all empty. Missing: ${missing_spaces[*]}" >&2
   exit 1
@@ -139,15 +139,16 @@ trap 'rm -f "$tmp"' EXIT
   printf "%s='%s'\n" BADGER_PATH "${deploy_path}/data/badger"
   printf "%s='%s'\n" SESSION_SECRET "$session"
   printf "%s='%s'\n" ADMIN_PASSWORD_BCRYPT "$admin"
-  [[ -n "$turnstile" ]] && printf "%s='%s'\n" TURNSTILE_SECRET_KEY "$turnstile"
-  [[ -n "$cors" ]] && printf "%s='%s'\n" CORS_ORIGIN "$cors"
-  [[ -n "$log_level" ]] && printf "%s='%s'\n" LOG_LEVEL "$log_level"
-  [[ -n "$log_path" ]] && printf "%s='%s'\n" LOG_PATH "$log_path"
-  [[ -n "$host_status" ]] && printf "%s='%s'\n" HOST_STATUS_PATH "$host_status"
-  [[ -n "$session_hours" ]] && printf "%s='%s'\n" ADMIN_SESSION_HOURS "$session_hours"
-  [[ -n "$rate_get" ]] && printf "%s='%s'\n" RATE_LIMIT_GET_MAX "$rate_get"
-  [[ -n "$rate_post" ]] && printf "%s='%s'\n" RATE_LIMIT_POST_MAX "$rate_post"
-  [[ -n "$rate_off" ]] && printf "%s='%s'\n" RATE_LIMIT_DISABLED "$rate_off"
+  # if, not &&. Bash 5 with set -e exits when the test in "[[ ]] && printf" is false.
+  if [[ -n "$turnstile" ]]; then printf "%s='%s'\n" TURNSTILE_SECRET_KEY "$turnstile"; fi
+  if [[ -n "$cors" ]]; then printf "%s='%s'\n" CORS_ORIGIN "$cors"; fi
+  if [[ -n "$log_level" ]]; then printf "%s='%s'\n" LOG_LEVEL "$log_level"; fi
+  if [[ -n "$log_path" ]]; then printf "%s='%s'\n" LOG_PATH "$log_path"; fi
+  if [[ -n "$host_status" ]]; then printf "%s='%s'\n" HOST_STATUS_PATH "$host_status"; fi
+  if [[ -n "$session_hours" ]]; then printf "%s='%s'\n" ADMIN_SESSION_HOURS "$session_hours"; fi
+  if [[ -n "$rate_get" ]]; then printf "%s='%s'\n" RATE_LIMIT_GET_MAX "$rate_get"; fi
+  if [[ -n "$rate_post" ]]; then printf "%s='%s'\n" RATE_LIMIT_POST_MAX "$rate_post"; fi
+  if [[ -n "$rate_off" ]]; then printf "%s='%s'\n" RATE_LIMIT_DISABLED "$rate_off"; fi
   if [[ ${#missing_spaces[@]} -eq 0 ]]; then
     printf "%s='%s'\n" SPACES_KEY "$spaces_key"
     printf "%s='%s'\n" SPACES_SECRET "$spaces_secret"

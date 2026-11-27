@@ -31,10 +31,19 @@ run_with() {
 out="$work/env"
 stdout="$work/stdout"
 stderr="$work/stderr"
-run_with "$out" "${base_env[@]}" >"$stdout" 2>"$stderr"
+if ! run_with "$out" "${base_env[@]}" >"$stdout" 2>"$stderr"; then
+  echo "write-api-env failed on the required settings" >&2
+  cat "$stderr" >&2
+  exit 1
+fi
 [[ ! -s "$stdout" ]]
 [[ ! -s "$stderr" ]]
-[[ "$(stat -f '%Lp' "$out" 2>/dev/null || stat -c '%a' "$out")" == "600" ]]
+if mode=$(stat -c '%a' "$out" 2>/dev/null); then
+  :
+else
+  mode=$(stat -f '%Lp' "$out")
+fi
+[[ "$mode" == "600" ]]
 grep -F -q "SESSION_SECRET='${session}'" "$out"
 grep -F -q "ADMIN_PASSWORD_BCRYPT='${admin}'" "$out"
 grep -F -q "BADGER_PATH='/var/www/kprovencal/data/badger'" "$out"
